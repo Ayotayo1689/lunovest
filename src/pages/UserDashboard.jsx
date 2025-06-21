@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import BigLogo from "../assets/biglogo.png"
+
 import {
   Card,
   CardContent,
@@ -250,10 +252,7 @@ export default function UserDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center ">
-              <Bitcoin className="h-8 w-8 text-purple-400" />
-              <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                AyCorp
-              </span>
+             <img src={BigLogo} alt="" width={"100px"} />
             </div>
 
             {/* Desktop Navigation */}

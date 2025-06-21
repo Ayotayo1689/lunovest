@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import BigLogo from "../assets/biglogo.png"
+
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import {
   TrendingUp,
@@ -346,10 +348,7 @@ const navigate = useNavigate()
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center ">
-              <Bitcoin className="h-8 w-8 text-purple-400" />
-              <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                AyCorp
-              </span>
+            <img src={BigLogo} alt=""  width={"100px"}  />
             </div>
 
             <div className="hidden md:flex items-center space-x-8">

@@ -39,6 +39,8 @@ import {
   Search,
 } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
+import BigLogo from "../assets/biglogo.png"
+
 
 export default function ConnectWallet() {
   const [selectedWallet, setSelectedWallet] = useState(null);
@@ -53,6 +55,7 @@ export default function ConnectWallet() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [qrModal, setQrModal] = useState(false);
   const { toast } = useToast();
+
 
   const connectionMethodRef = useRef(null);
   const connectionFormRef = useRef(null);
@@ -511,7 +514,7 @@ export default function ConnectWallet() {
       <header className="border-b border-purple-500/20 backdrop-blur-md bg-black/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-1 items-center space-x-4">
               <Button
                 variant="ghost"
                 onClick={handleGoBack}
@@ -520,11 +523,9 @@ export default function ConnectWallet() {
                 <ArrowLeft className="h-5 w-5 mr-2" />
                 Back
               </Button>
-              <div className="flex items-center ">
-                <Bitcoin className="h-8 w-8 text-purple-400" />
-                <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                AyCorp
-                </span>
+              <div className="flex justify-end items-center   flex-1 ">
+              <img src={BigLogo} alt="" className="object-contain" width={"100px"}  />
+              
               </div>
             </div>
           </div>

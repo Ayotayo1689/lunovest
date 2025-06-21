@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import BigLogo from "../assets/biglogo.png"
+import BigLogo from "../assets/biglogo.png";
 
 import {
   Card,
@@ -183,6 +183,12 @@ export default function UserDashboard() {
     setAddressCopied(false);
   };
 
+  const handleCreatePlanClick = () => {
+    setDepositModal(true);
+    setDepositStep("createPlan");
+    setAddressCopied(false);
+  };
+
   const handleCopyAddress = async () => {
     try {
       await navigator.clipboard.writeText(walletAddress);
@@ -252,7 +258,7 @@ export default function UserDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center ">
-             <img src={BigLogo} alt="" width={"100px"} />
+              <img src={BigLogo} alt="" width={"100px"} />
             </div>
 
             {/* Desktop Navigation */}
@@ -411,7 +417,7 @@ export default function UserDashboard() {
         <div className="mb-8">
           <div className="flex flex-col space-y-4">
             <div>
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold  text-white">
                 Welcome back, {userData.name.split(" ")[0]}! 👋
               </h1>
               <p className="text-gray-300 mt-2 text-sm md:text-base">
@@ -622,9 +628,19 @@ export default function UserDashboard() {
           <div>
             <Card className="bg-gradient-to-br from-slate-900/50 to-purple-900/20 border-purple-500/30 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2 text-lg">
-                  <PieChart className="h-5 w-5 text-purple-400" />
-                  Active Plans
+                <CardTitle className="text-white justify-between  flex items-center gap-2 text-lg">
+                  <div className="flex justify-center gap-2 items-center">
+                    {" "}
+                    <PieChart className="h-5 w-5 text-purple-400" />
+                    Active Plans
+                  </div>
+                  <Button
+                    onClick={handleCreatePlanClick}
+                    variant="ghost"
+                    className="text-purple-400 p-0 hover:text-white hover:bg-purple-500/20 text-sm"
+                  >
+                    Create Plan
+                  </Button>
                 </CardTitle>
                 <CardDescription className="text-gray-300 text-sm">
                   Your current investments
@@ -799,6 +815,21 @@ export default function UserDashboard() {
           </DialogHeader>
 
           {depositStep === "generating" && (
+            <div className="flex flex-col items-center space-y-6 py-8">
+              <Loader2 className="h-12 w-12 text-purple-400 animate-spin" />
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Generating Wallet Address
+                </h3>
+                <p className="text-gray-300 text-sm">
+                  Please wait while we generate a secure wallet address for
+                  you...
+                </p>
+              </div>
+            </div>
+          )}
+
+          {depositStep === "createPlan" && (
             <div className="flex flex-col items-center space-y-6 py-8">
               <Loader2 className="h-12 w-12 text-purple-400 animate-spin" />
               <div className="text-center">

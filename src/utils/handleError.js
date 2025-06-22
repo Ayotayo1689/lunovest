@@ -9,7 +9,12 @@ export const handleError = (error, response = null, data = null) => {
 
   // Network/Connection Errors
   if (error?.name === "TypeError" && error?.message === "Failed to fetch") {
-    toast.error("Unable to reach the server. Please check your internet connection or try again later.", {
+    // toast.error("Unable to reach the server. Please check your internet connection or try again later.", {
+    //   style: { background: "#fff", color: "#000" },
+    //   position: "top-right",
+    //   autoClose: 5000,
+    // })
+    toast.error(error, {
       style: { background: "#fff", color: "#000" },
       position: "top-right",
       autoClose: 5000,
@@ -23,11 +28,16 @@ export const handleError = (error, response = null, data = null) => {
 
   // Handle fetch errors
   if (error?.status === "FETCH_ERROR" || !response) {
-    toast.error("Unable to reach the server. Please try again later or contact support.", {
+    toast.error(error, {
       style: { background: "#fff", color: "#000" },
       position: "top-right",
       autoClose: 5000,
     })
+    // toast.error("Unable to reach the server. Please try again later or contact support.", {
+    //   style: { background: "#fff", color: "#000" },
+    //   position: "top-right",
+    //   autoClose: 5000,
+    // })
     return {
       type: "FETCH_ERROR",
       message: "Server unreachable",

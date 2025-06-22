@@ -8,6 +8,7 @@ import UserDashboard from "./pages/UserDashboard";
 import ConnectWallet from "./pages/ConnectWallet";
 import { Provider } from "react-redux";
 import { store } from "./app/store";
+import AdminPage from "./pages/Admin";
 
 export const Fallback = () => (
   <div className="flex-1 bg-white flex justify-center items-center min-h-[70vh] h-[100%]w-[100%]">
@@ -35,6 +36,10 @@ function App() {
           <Route
             path="/connect_wallet"
             element={<LazyRoute Component={ConnectWallet} />}
+          />
+          <Route
+            path="/admin"
+            element={<LazyRoute Component={AdminPage} />}
           />
         </Routes>
       </Router>

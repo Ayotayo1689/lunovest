@@ -169,7 +169,7 @@ export default function Home() {
     {
       name: "Sarah Johnson",
       role: "Professional Trader",
-      image: "/placeholder.svg?height=60&width=60",
+      image: "https://plus.unsplash.com/premium_photo-1689551671541-31a345ce6ae0?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       content:
         "LunoVest has transformed my investment strategy. I've been earning consistent 3.5% daily returns for 6 months now. The platform is incredibly reliable and secure.",
       rating: 5,
@@ -178,7 +178,7 @@ export default function Home() {
     {
       name: "Michael Chen",
       role: "Business Owner",
-      image: "/placeholder.svg?height=60&width=60",
+      image: "https://plus.unsplash.com/premium_photo-1690296204289-14e517830d8e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Njl8fGxhZHl8ZW58MHx8MHx8fDA%3D",
       content:
         "Started with the Enterprise plan and couldn't be happier. The AI trading algorithms are impressive, and the customer support is outstanding. Highly recommended!",
       rating: 5,
@@ -187,7 +187,7 @@ export default function Home() {
     {
       name: "Emma Rodriguez",
       role: "Financial Advisor",
-      image: "/placeholder.svg?height=60&width=60",
+      image: "https://media.istockphoto.com/id/2162937006/photo/studio-portrait-of-decision-making-businesswoman-in-businesswear.webp?a=1&b=1&s=612x612&w=0&k=20&c=Pu-hZ3TEdx-khwkiX_ql6P0Z8JmPX7W0ghpEorhqP1E=",
       content:
         "As a financial advisor, I'm always skeptical of investment platforms. LunoVest proved me wrong with their transparency and consistent performance. My clients love it!",
       rating: 5,
@@ -844,7 +844,7 @@ export default function Home() {
                     <img
                       src={testimonial.image || "/placeholder.svg"}
                       alt={testimonial.name}
-                      className="w-12 h-12 rounded-full border-2 border-purple-400"
+                      className="w-12 h-12 object-cover rounded-full border-2 border-purple-400"
                     />
                     <div>
                       <h4 className="text-white font-semibold">

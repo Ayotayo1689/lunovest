@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import BigLogo from "../assets/biglogo.png";
+import {
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+} from "recharts";
 
 import {
   Card,
@@ -73,8 +82,9 @@ export default function UserDashboard() {
   const [depositModal, setDepositModal] = useState(false);
   const [withdrawModal, setWithdrawModal] = useState(false);
   const [createPlanModal, setCreatePlanModal] = useState(false);
-  const [depositStep, setDepositStep] = useState("generating"); // generating, address, completed
-  const [createPlanStep, setCreatePlanStep] = useState("form"); // form, generating, address
+  const [depositStep, setDepositStep] = useState("generating");
+  const [createPlanStep, setCreatePlanStep] = useState("form");
+  const [withdrawStep, setWithdrawStep] = useState("planSelection"); // planSelection, processing, completed
   const [addressCopied, setAddressCopied] = useState(false);
 
   // Create Plan Form State
@@ -92,20 +102,27 @@ export default function UserDashboard() {
   const [depositCryptoAmount, setDepositCryptoAmount] = useState("");
   const [depositSelectedCrypto, setDepositSelectedCrypto] = useState("");
 
+  // Withdraw Form State
+  const [selectedWithdrawPlan, setSelectedWithdrawPlan] = useState("");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [withdrawWalletAddress, setWithdrawWalletAddress] = useState("");
+
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const userData1 = localStorage.getItem("userData");
   const parsedUserData = JSON.parse(userData1);
-  console.log(userData1);
 
   useEffect(() => {
     if (userData1 === null) {
       navigate("/");
     }
   }, [userData1]);
- 
 
+  const handleConnectWallet = () => {
+    setWithdrawModal(false);
+    navigate("/connect_wallet");
+  };
   const {
     data: userPlans,
     isLoading: isLoadingUserPlans,
@@ -126,12 +143,17 @@ export default function UserDashboard() {
     error: errorTransactionHistory,
     refetch: refetchTransactionHistory,
   } = useApiGet(
-    `investment/transactions/${parsedUserData?.userId}?page=1&limit=5`
+    `investment/transactions/${parsedUserData?.userId}?page=1&limit=50`
   );
 
-  useEffect(() => {
-    console.log(userPlans);
-  }, [userPlans]);
+  const {
+    data: userTransactionHistoryGraph,
+    isLoading: isLoadingUserTransactionHistoryGraph,
+    error: errorTransactionHistoryGraph,
+    refetch: refetchTransactionHistoryGraph,
+  } = useApiGet(
+    `investment/transactions/${parsedUserData?.userId}?page=1&limit=50000`
+  );
 
   // Available investment plans
   const investmentPlans = [
@@ -165,49 +187,187 @@ export default function UserDashboard() {
     },
   ];
 
-  // Mock crypto data as fallback
-  const mockCryptoData = {
-    cryptoList: [
-      { id: "bitcoin", name: "Bitcoin", symbol: "BTC" },
-      { id: "ethereum", name: "Ethereum", symbol: "ETH" },
-      { id: "binancecoin", name: "BNB", symbol: "BNB" },
-      { id: "cardano", name: "Cardano", symbol: "ADA" },
-      { id: "solana", name: "Solana", symbol: "SOL" },
-      { id: "polkadot", name: "Polkadot", symbol: "DOT" },
-      { id: "dogecoin", name: "Dogecoin", symbol: "DOGE" },
-      { id: "avalanche-2", name: "Avalanche", symbol: "AVAX" },
-      { id: "polygon", name: "Polygon", symbol: "MATIC" },
-      { id: "chainlink", name: "Chainlink", symbol: "LINK" },
-    ],
-    prices: {
-      bitcoin: { usd: 43250 },
-      ethereum: { usd: 2650 },
-      binancecoin: { usd: 315 },
-      cardano: { usd: 0.52 },
-      solana: { usd: 98 },
-      polkadot: { usd: 7.2 },
-      dogecoin: { usd: 0.085 },
-      "avalanche-2": { usd: 36 },
-      polygon: { usd: 0.89 },
-      chainlink: { usd: 14.5 },
+  // Supported cryptocurrencies with their wallet addresses
+  const supportedCryptos = {
+    "usd-coin": {
+      id: "usd-coin",
+      name: "USD Coin",
+      symbol: "USDC",
+      walletAddress: "0x8E5Ea7e20B8D2165189DDc19aea0c65b3dAb8a48",
+      network: "Ethereum",
     },
+    ethereum: {
+      id: "ethereum",
+      name: "Ethereum",
+      symbol: "ETH",
+      walletAddress: "0x8E5Ea7e20B8D2165189DDc19aea0c65b3dAb8a48",
+      network: "Ethereum",
+    },
+    "tether-tron": {
+      id: "tether",
+      name: "Tether (Tron)",
+      symbol: "USDT",
+      walletAddress: "TSMC4rE1njaAbdkSM5NSu62AXwE4ei5FkL",
+      network: "Tron",
+    },
+    "tether-bnb": {
+      id: "tether",
+      name: "Tether (BNB Chain)",
+      symbol: "USDT",
+      walletAddress: "0x8E5Ea7e20B8D2165189DDc19aea0c65b3dAb8a48",
+      network: "BNB Smart Chain",
+    },
+    binancecoin: {
+      id: "binancecoin",
+      name: "BNB",
+      symbol: "BNB",
+      walletAddress: "0x8E5Ea7e20B8D2165189DDc19aea0c65b3dAb8a48",
+      network: "BNB Smart Chain",
+    },
+    ripple: {
+      id: "ripple",
+      name: "XRP",
+      symbol: "XRP",
+      walletAddress: "rhLh8TofQ1Vooyf9jek1EVBtqdeyr8u2Uy",
+      network: "XRP Ledger",
+    },
+    bitcoin: {
+      id: "bitcoin",
+      name: "Bitcoin",
+      symbol: "BTC",
+      walletAddress: "bc1qply66nzysdcshe3dxnkr56wnpr8lzlyhlg60a3",
+      network: "Bitcoin",
+    },
+    solana: {
+      id: "solana",
+      name: "Solana",
+      symbol: "SOL",
+      walletAddress: "UTRb1uYXJ8x7xaXPRJWBvgSy8o2QEdFVfnR7HweuXHy",
+      network: "Solana",
+    },
+  };
+
+  // Convert supported cryptos to array format for easier use
+  const supportedCryptoList = Object.values(supportedCryptos);
+
+  // Mock crypto data as fallback with only supported coins
+  const mockCryptoData = {
+    cryptoList: supportedCryptoList,
+    prices: {
+      "usd-coin": { usd: 1.0 },
+      ethereum: { usd: 2650 },
+      tether: { usd: 1.0 },
+      binancecoin: { usd: 315 },
+      ripple: { usd: 0.52 },
+      bitcoin: { usd: 43250 },
+      solana: { usd: 98 },
+    },
+  };
+
+  // Check if withdraw button should be shown
+  const shouldShowWithdrawButton = () => {
+    const hasActivePlans = userPlans?.data && userPlans.data.length > 0;
+    const hasBalance =
+      userInvestmentSummary?.data?.totalInvestment +
+        userInvestmentSummary?.data?.totalProfit >
+      0;
+    const hasProfit = userInvestmentSummary?.data?.totalProfit > 0;
+
+    return hasActivePlans && hasBalance && hasProfit;
+  };
+
+  // Process transaction history for chart
+  const processTransactionDataForChart = () => {
+    if (!userTransactionHistoryGraph?.data?.transactions) return [];
+
+    const transactions = [
+      ...userTransactionHistoryGraph.data.transactions,
+    ].sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+
+    let runningBalance = 0;
+    const chartData = [];
+
+    transactions.forEach((transaction, index) => {
+      if (transaction.transactionType === "deposit") {
+        runningBalance += transaction.amount;
+      } else if (transaction.transactionType === "profit") {
+        runningBalance += transaction.amount;
+      } else if (transaction.transactionType === "withdrawal") {
+        runningBalance -= transaction.amount;
+      }
+
+      chartData.push({
+        date: formatDate(transaction.dateTime),
+        balance: runningBalance,
+        amount: transaction.amount,
+        type: transaction.transactionType,
+        description: transaction.description,
+      });
+    });
+
+    return chartData;
+  };
+
+  const chartData = processTransactionDataForChart();
+
+  // Custom tooltip for the chart
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-slate-800 border border-slate-600 rounded-lg p-3 shadow-lg">
+          <p className="text-white font-medium">{label}</p>
+          <p className="text-green-400">
+            Balance: {formatCurrency(data.balance)}
+          </p>
+          <p className="text-gray-300 text-sm">{data.description}</p>
+          <p
+            className={`text-sm ${
+              data.type === "deposit"
+                ? "text-green-400"
+                : data.type === "profit"
+                ? "text-blue-400"
+                : "text-red-400"
+            }`}
+          >
+            {data.type === "withdrawal" ? "-" : "+"}
+            {formatCurrency(data.amount)}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Get wallet address for selected crypto
+  const getWalletAddress = (cryptoKey) => {
+    return supportedCryptos[cryptoKey]?.walletAddress || "";
+  };
+
+  // Get current wallet address based on selected crypto
+  const getCurrentWalletAddress = () => {
+    if (createPlanStep === "address" && selectedCrypto) {
+      return getWalletAddress(selectedCrypto);
+    }
+    if (depositStep === "address" && depositSelectedCrypto) {
+      return getWalletAddress(depositSelectedCrypto);
+    }
+    return "";
   };
 
   // Fetch crypto data from CoinGecko with caching and rate limiting
   useEffect(() => {
     const fetchCryptoData = async () => {
-      // Check if we have cached data that's less than 5 minutes old
       const cachedData = localStorage.getItem("cryptoData");
       const cacheTimestamp = localStorage.getItem("cryptoDataTimestamp");
       const now = Date.now();
-      const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+      const fiveMinutes = 5 * 60 * 1000;
 
       if (
         cachedData &&
         cacheTimestamp &&
         now - Number.parseInt(cacheTimestamp) < fiveMinutes
       ) {
-        console.log("Using cached crypto data");
         const parsed = JSON.parse(cachedData);
         setCryptoList(parsed.cryptoList);
         setCryptoPrices(parsed.prices);
@@ -218,15 +378,16 @@ export default function UserDashboard() {
       setLoadingCrypto(true);
 
       try {
-        // Add a random delay to spread out API calls
-        const randomDelay = Math.random() * 2000; // 0-2 seconds
+        const randomDelay = Math.random() * 2000;
         await new Promise((resolve) => setTimeout(resolve, randomDelay));
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
 
+        const supportedIds =
+          "usd-coin,ethereum,tether,binancecoin,ripple,bitcoin,solana";
         const response = await fetch(
-          "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,cardano,solana,polkadot,dogecoin,avalanche-2,polygon,chainlink&vs_currencies=usd",
+          `https://api.coingecko.com/api/v3/simple/price?ids=${supportedIds}&vs_currencies=usd`,
           {
             signal: controller.signal,
             mode: "cors",
@@ -244,30 +405,18 @@ export default function UserDashboard() {
 
         const data = await response.json();
 
-        // Cache the successful response
         const cacheData = {
-          cryptoList: mockCryptoData.cryptoList,
+          cryptoList: supportedCryptoList,
           prices: data,
         };
         localStorage.setItem("cryptoData", JSON.stringify(cacheData));
         localStorage.setItem("cryptoDataTimestamp", now.toString());
 
-        setCryptoList(mockCryptoData.cryptoList);
+        setCryptoList(supportedCryptoList);
         setCryptoPrices(data);
-
-        console.log(
-          "Successfully fetched and cached crypto data from CoinGecko"
-        );
       } catch (error) {
-        console.warn(
-          "CoinGecko API failed, using fallback data:",
-          error.message
-        );
-
-        // Try to use any cached data, even if expired
         const cachedData = localStorage.getItem("cryptoData");
         if (cachedData) {
-          console.log("Using expired cached data as fallback");
           const parsed = JSON.parse(cachedData);
           setCryptoList(parsed.cryptoList);
           setCryptoPrices(parsed.prices);
@@ -278,7 +427,6 @@ export default function UserDashboard() {
             variant: "default",
           });
         } else {
-          // Use mock data as final fallback
           setCryptoList(mockCryptoData.cryptoList);
           setCryptoPrices(mockCryptoData.prices);
 
@@ -294,11 +442,9 @@ export default function UserDashboard() {
     };
 
     fetchCryptoData();
-  }, []); // Only run once when component mounts
+  }, []);
 
-  // Add this function after the useEffect
   const refreshCryptoPrices = async () => {
-    // Clear cache to force fresh data
     localStorage.removeItem("cryptoData");
     localStorage.removeItem("cryptoDataTimestamp");
 
@@ -308,8 +454,10 @@ export default function UserDashboard() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
 
+      const supportedIds =
+        "usd-coin,ethereum,tether,binancecoin,ripple,bitcoin,solana";
       const response = await fetch(
-        "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,cardano,solana,polkadot,dogecoin,avalanche-2,polygon,chainlink&vs_currencies=usd",
+        `https://api.coingecko.com/api/v3/simple/price?ids=${supportedIds}&vs_currencies=usd`,
         {
           signal: controller.signal,
           mode: "cors",
@@ -327,9 +475,8 @@ export default function UserDashboard() {
 
       const data = await response.json();
 
-      // Cache the successful response
       const cacheData = {
-        cryptoList: mockCryptoData.cryptoList,
+        cryptoList: supportedCryptoList,
         prices: data,
       };
       localStorage.setItem("cryptoData", JSON.stringify(cacheData));
@@ -383,10 +530,11 @@ export default function UserDashboard() {
   };
 
   // Handle crypto selection for create plan
-  const handleCryptoSelect = (cryptoId) => {
-    setSelectedCrypto(cryptoId);
-    if (amount) {
-      setCryptoAmount(convertToCrypto(amount, cryptoId));
+  const handleCryptoSelect = (cryptoKey) => {
+    setSelectedCrypto(cryptoKey);
+    const cryptoData = supportedCryptos[cryptoKey];
+    if (amount && cryptoData) {
+      setCryptoAmount(convertToCrypto(amount, cryptoData.id));
     }
   };
 
@@ -394,7 +542,10 @@ export default function UserDashboard() {
   const handleDepositAmountChange = (value) => {
     setDepositAmount(value);
     if (depositSelectedCrypto) {
-      setDepositCryptoAmount(convertToCrypto(value, depositSelectedCrypto));
+      const cryptoData = supportedCryptos[depositSelectedCrypto];
+      if (cryptoData) {
+        setDepositCryptoAmount(convertToCrypto(value, cryptoData.id));
+      }
     }
   };
 
@@ -402,22 +553,23 @@ export default function UserDashboard() {
   const handleDepositCryptoAmountChange = (value) => {
     setDepositCryptoAmount(value);
     if (depositSelectedCrypto) {
-      setDepositAmount(convertToUSD(value, depositSelectedCrypto));
+      const cryptoData = supportedCryptos[depositSelectedCrypto];
+      if (cryptoData) {
+        setDepositAmount(convertToUSD(value, cryptoData.id));
+      }
     }
   };
 
   // Handle crypto selection for deposit
-  const handleDepositCryptoSelect = (cryptoId) => {
-    setDepositSelectedCrypto(cryptoId);
-    if (depositAmount) {
-      setDepositCryptoAmount(convertToCrypto(depositAmount, cryptoId));
+  const handleDepositCryptoSelect = (cryptoKey) => {
+    setDepositSelectedCrypto(cryptoKey);
+    const cryptoData = supportedCryptos[cryptoKey];
+    if (depositAmount && cryptoData) {
+      setDepositCryptoAmount(convertToCrypto(depositAmount, cryptoData.id));
     }
   };
 
-  // Mock wallet address
-  const walletAddress = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
-
-  // Mock user data with 10% daily growth
+  // Mock user data
   const userData = {
     name: "John Anderson",
     email: "john.anderson@email.com",
@@ -430,91 +582,6 @@ export default function UserDashboard() {
     lastLogin: "2 hours ago",
     membershipLevel: "Professional",
   };
-
-  // Updated investment data showing 10% daily growth
-  const investmentData = [
-    { date: "Day 1", invested: 5000, balance: 5000, profit: 0 },
-    { date: "Day 2", invested: 0, balance: 5500, profit: 500 },
-    { date: "Day 3", invested: 0, balance: 6050, profit: 1050 },
-    { date: "Day 4", invested: 0, balance: 6655, profit: 1655 },
-    { date: "Day 5", invested: 2500, balance: 9820, profit: 2320 },
-    { date: "Day 6", invested: 0, balance: 10802, profit: 3302 },
-    { date: "Day 7", invested: 0, balance: 11882, profit: 4382 },
-    { date: "Day 8", invested: 3250, balance: 16820, profit: 6070 },
-    { date: "Day 9", invested: 0, balance: 18502, profit: 7752 },
-    { date: "Day 10", invested: 0, balance: 20352, profit: 9602 },
-    { date: "Day 11", invested: 0, balance: 22387, profit: 11637 },
-    { date: "Day 12", invested: 0, balance: 23847, profit: 13097 },
-  ];
-
-  const recentTransactions = [
-    {
-      id: 1,
-      type: "profit",
-      amount: 287.5,
-      description: "Daily Profit - 10% Return",
-      date: "2024-05-03",
-      time: "09:00 AM",
-      status: "completed",
-    },
-    {
-      id: 2,
-      type: "deposit",
-      amount: 3250.0,
-      description: "Bitcoin Deposit",
-      date: "2024-04-19",
-      time: "02:30 PM",
-      status: "completed",
-    },
-    {
-      id: 3,
-      type: "profit",
-      amount: 195.75,
-      description: "Daily Profit - 10% Return",
-      date: "2024-05-02",
-      time: "09:00 AM",
-      status: "completed",
-    },
-    {
-      id: 4,
-      type: "withdrawal",
-      amount: 1500.0,
-      description: "Profit Withdrawal",
-      date: "2024-04-28",
-      time: "11:15 AM",
-      status: "completed",
-    },
-  ];
-
-  const activePlans = [
-    {
-      name: "Professional Plan",
-      amount: 8500,
-      dailyReturn: "10%",
-      daysLeft: 23,
-      totalDays: 45,
-      profit: 4250.75,
-      status: "active",
-    },
-    {
-      name: "Starter Plan",
-      amount: 2500,
-      dailyReturn: "10%",
-      daysLeft: 12,
-      totalDays: 30,
-      profit: 1125.5,
-      status: "active",
-    },
-    {
-      name: "Enterprise Plan",
-      amount: 4750,
-      dailyReturn: "10%",
-      daysLeft: 38,
-      totalDays: 60,
-      profit: 2721.0,
-      status: "active",
-    },
-  ];
 
   // Handle create plan modal steps
   useEffect(() => {
@@ -560,7 +627,7 @@ export default function UserDashboard() {
     }
 
     const planData = investmentPlans.find((p) => p.planId === selectedPlan);
-    const cryptoData = cryptoList.find((c) => c.id === selectedCrypto);
+    const cryptoData = supportedCryptos[selectedCrypto];
 
     if (Number.parseFloat(amount) < planData.minimumAmount) {
       toast({
@@ -580,12 +647,11 @@ export default function UserDashboard() {
       amount: Number.parseFloat(amount),
       currency: "USD",
       amountInCrypto: Number.parseFloat(cryptoAmount),
-      cryptoCoinName: cryptoData.symbol,
+      cryptoCoinName: cryptoData.symbol + " " + `(${cryptoData.network})`,
     };
 
     try {
       const response = await post("investment/create-plan", payload, true);
-      console.log(response);
 
       if (response.success) {
         setCreatePlanStep("generating");
@@ -625,14 +691,14 @@ export default function UserDashboard() {
       return;
     }
 
-    const cryptoData = cryptoList.find((c) => c.id === depositSelectedCrypto);
+    const cryptoData = supportedCryptos[depositSelectedCrypto];
 
     const payload = {
       investmentPlanId: selectedDepositPlan,
       userId: parsedUserData.userId,
       amount: Number.parseFloat(depositAmount),
       amountInCrypto: Number.parseFloat(depositCryptoAmount),
-      cryptoCoinName: cryptoData.symbol,
+      cryptoCoinName: cryptoData.symbol + " " + `(${cryptoData?.network})`,
     };
 
     try {
@@ -660,6 +726,69 @@ export default function UserDashboard() {
     }
   };
 
+  // Submit withdrawal
+  const handleWithdrawSubmit = async () => {
+    if (!selectedWithdrawPlan || !withdrawAmount || !withdrawWalletAddress) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const selectedPlan = userPlans?.data?.find(
+      (plan) => plan.investmentPlanId === selectedWithdrawPlan
+    );
+
+    if (!selectedPlan) {
+      toast({
+        title: "Error",
+        description: "Selected plan not found",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const payload = {
+      investmentPlanId: selectedWithdrawPlan,
+      userId: parsedUserData.userId,
+      amount: Number.parseFloat(withdrawAmount),
+      walletAddress: withdrawWalletAddress,
+    };
+
+    try {
+      setWithdrawStep("processing");
+      const response = await post("/investment/withdraw", payload, true);
+
+      if (response.success) {
+        setWithdrawStep("completed");
+        toast({
+          title: "Success",
+          description: "Withdrawal request submitted successfully!",
+        });
+        refetchPlans();
+        refetchInvestmentSummary();
+        refetchTransactionHistory();
+        errorTransactionHistoryGraph();
+      } else {
+        setWithdrawStep("planSelection");
+        toast({
+          title: "Something went wrong.",
+          description: response?.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      setWithdrawStep("planSelection");
+      toast({
+        title: "Error",
+        description: "Failed to process withdrawal",
+        variant: "destructive",
+      });
+    }
+  };
+
   function getTotalDays(startDateString, daysLeft) {
     const startDate = new Date(startDateString);
     const futureDate = new Date(startDate);
@@ -672,6 +801,7 @@ export default function UserDashboard() {
   }
 
   const handleCopyAddress = async () => {
+    const walletAddress = getCurrentWalletAddress();
     try {
       await navigator.clipboard.writeText(walletAddress);
       setAddressCopied(true);
@@ -692,6 +822,8 @@ export default function UserDashboard() {
     setDepositModal(false);
     setDepositStep("planSelection");
     setAddressCopied(false);
+    refetchTransactionHistory();
+    errorTransactionHistoryGraph();
     toast({
       title: "Deposit Initiated!",
       description: "Your deposit will be processed within 10 minutes",
@@ -712,11 +844,10 @@ export default function UserDashboard() {
 
   const handleWithdrawClick = () => {
     setWithdrawModal(true);
-  };
-
-  const handleConnectWallet = () => {
-    setWithdrawModal(false);
-    navigate("/connect_wallet");
+    setWithdrawStep("planSelection");
+    setSelectedWithdrawPlan("");
+    setWithdrawAmount("");
+    setWithdrawWalletAddress("");
   };
 
   const closeDepositModal = () => {
@@ -733,6 +864,14 @@ export default function UserDashboard() {
     setSelectedCrypto("");
     setAmount("");
     setCryptoAmount("");
+  };
+
+  const closeWithdrawModal = () => {
+    setWithdrawModal(false);
+    setWithdrawStep("planSelection");
+    setSelectedWithdrawPlan("");
+    setWithdrawAmount("");
+    setWithdrawWalletAddress("");
   };
 
   const formatCurrency = (amount) => {
@@ -943,22 +1082,7 @@ export default function UserDashboard() {
                 {userData.membershipLevel} Member
               </Badge>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
-                onClick={handleDepositClick}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Deposit
-              </Button>
-              <Button
-                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
-                onClick={handleWithdrawClick}
-              >
-                <Minus className="h-4 w-4 mr-2" />
-                Withdraw
-              </Button>
-            </div>
+           
           </div>
         </div>
 
@@ -1010,19 +1134,18 @@ export default function UserDashboard() {
               <div className="text-lg md:text-2xl font-bold text-white">
                 {balanceVisible
                   ? formatCurrency(
-                    (  userInvestmentSummary?.data?.totalInvestment +
-                        userInvestmentSummary?.data?.totalProfit) || 0
+                      userInvestmentSummary?.data?.totalInvestment +
+                        userInvestmentSummary?.data?.totalProfit || 0
                     )
                   : "••••••"}{" "}
               </div>
               <p className="text-xs text-green-400 mt-1">
                 +
                 {(
-                  (((userInvestmentSummary?.data?.totalInvestment +
+                  ((userInvestmentSummary?.data?.totalInvestment +
                     userInvestmentSummary?.data?.totalProfit) /
                     userInvestmentSummary?.data?.totalInvestment -
-                    1) || 0) *
-                  100
+                    1 || 0) * 100
                 ).toFixed(0)}
                 % growth
               </p>
@@ -1044,9 +1167,6 @@ export default function UserDashboard() {
                     )
                   : "••••••"}
               </div>
-              <p className="text-xs text-blue-400 mt-1">
-                {/* +{userPlans.dailyPercentage}% return */}
-              </p>
             </CardContent>
           </Card>
 
@@ -1066,27 +1186,45 @@ export default function UserDashboard() {
               </p>
             </CardContent>
           </Card>
-        </div>
+        </div> <div className="flex mb-8 flex-col sm:flex-row gap-3">
+              <Button
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                onClick={handleDepositClick}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Deposit
+              </Button>
+              {shouldShowWithdrawButton() && (
+                <Button
+                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
+                  onClick={handleWithdrawClick}
+                >
+                  <Minus className="h-4 w-4 mr-2" />
+                  Withdraw
+                </Button>
+              )}
+            </div>
 
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
           {/* Investment Growth Chart */}
-          <div className="lg:col-span-2 hidden  md:block">
+          <div className="lg:col-span-2">
             <Card className="bg-gradient-to-br from-slate-900/50 to-purple-900/20 border-purple-500/30 backdrop-blur-sm">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-white flex items-center gap-2 text-lg md:text-xl">
                       <BarChart3 className="h-5 w-5 text-purple-400" />
-                      Investment Growth (10% Daily)
+                      Portfolio Performance
                     </CardTitle>
                     <CardDescription className="text-gray-300 text-sm">
-                      Your portfolio performance over time
+                      Your investment balance over time
                     </CardDescription>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
+                    onClick={refetchTransactionHistoryGraph}
                     className="text-gray-400 hover:text-white"
                   >
                     <RefreshCw className="h-4 w-4" />
@@ -1094,56 +1232,64 @@ export default function UserDashboard() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="h-64 md:h-80 flex items-end justify-between space-x-1 mb-4 overflow-x-auto">
-                  <div className="flex items-end space-x-1 min-w-full">
-                    {investmentData.map((item, index) => {
-                      const maxValue = Math.max(
-                        ...investmentData.map((d) => d.balance)
-                      );
-                      const height = (item.balance / maxValue) * 100;
-                      const profitHeight = (item.profit / maxValue) * 100;
-                      return (
-                        <div
-                          key={index}
-                          className="flex flex-col items-center flex-1 min-w-0 group"
-                        >
-                          <div className="relative w-full min-w-[20px]">
-                            <div
-                              className="w-full bg-gradient-to-t from-purple-600 to-purple-400 rounded-t-sm transition-all duration-300 hover:from-purple-500 hover:to-purple-300 cursor-pointer"
-                              style={{ height: `${height}%` }}
+                {chartData.length > 0 ? (
+                  <div className="h-64 md:h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData}>
+                        <defs>
+                          <linearGradient
+                            id="balanceGradient"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="#8b5cf6"
+                              stopOpacity={0.8}
                             />
-                            {item.profit > 0 && (
-                              <div
-                                className="absolute bottom-0 w-full bg-gradient-to-t from-green-600 to-green-400 rounded-t-sm"
-                                style={{ height: `${profitHeight}%` }}
-                              />
-                            )}
-                          </div>
-                          <span className="text-gray-300 text-xs mt-2 group-hover:text-white transition-colors truncate w-full text-center">
-                            {item.date}
-                          </span>
-                          <span className="text-gray-400 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                            {formatCurrency(item.balance || 0)}
-                          </span>
-                        </div>
-                      );
-                    })}
+                            <stop
+                              offset="95%"
+                              stopColor="#8b5cf6"
+                              stopOpacity={0.1}
+                            />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                        <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} />
+                        <YAxis
+                          stroke="#9ca3af"
+                          fontSize={12}
+                          tickFormatter={(value) =>
+                            `$${value.toLocaleString()}`
+                          }
+                        />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Area
+                          type="monotone"
+                          dataKey="balance"
+                          stroke="#8b5cf6"
+                          strokeWidth={2}
+                          fillOpacity={1}
+                          fill="url(#balanceGradient)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
                   </div>
-                </div>
-                <div className="flex items-center justify-center space-x-4 md:space-x-6 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-gradient-to-r from-purple-600 to-purple-400 rounded"></div>
-                    <span className="text-gray-300 text-xs md:text-sm">
-                      Total Balance
-                    </span>
+                ) : (
+                  <div className="h-64 md:h-80 flex items-center justify-center">
+                    <div className="text-center">
+                      <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-400">
+                        No transaction data available
+                      </p>
+                      <p className="text-gray-500 text-sm">
+                        Make your first investment to see the chart
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-gradient-to-r from-green-600 to-green-400 rounded"></div>
-                    <span className="text-gray-300 text-xs md:text-sm">
-                      Profit (10% Daily)
-                    </span>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -1154,7 +1300,6 @@ export default function UserDashboard() {
               <CardHeader>
                 <CardTitle className="text-white justify-between  flex items-center gap-2 text-lg">
                   <div className="flex justify-center gap-2 items-center">
-                    {" "}
                     <PieChart className="h-5 w-5 text-purple-400" />
                     Active Plans
                   </div>
@@ -1171,53 +1316,63 @@ export default function UserDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {userPlans?.data?.map((plan, index) => (
-                  <div
-                    key={index}
-                    className="bg-gradient-to-r from-gray-800/30 to-gray-700/20 border border-gray-600/30 rounded-lg p-4 hover:border-purple-500/30 transition-colors"
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h4 className="text-white font-semibold text-sm">
-                          {plan?.investmentPlanName}
-                        </h4>
-                        <p className="text-gray-400 text-xs">
-                          {formatCurrency(plan?.totalAmountInvested || 0)}{" "}
-                          invested
-                        </p>
+                {userPlans?.data?.length > 0 ? (
+                  userPlans.data.map((plan, index) => (
+                    <div
+                      key={index}
+                      className="bg-gradient-to-r from-gray-800/30 to-gray-700/20 border border-gray-600/30 rounded-lg p-4 hover:border-purple-500/30 transition-colors"
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h4 className="text-white font-semibold text-sm">
+                            {plan?.investmentPlanName}
+                          </h4>
+                          <p className="text-gray-400 text-xs">
+                            {formatCurrency(plan?.totalAmountInvested || 0)}{" "}
+                            invested
+                          </p>
+                        </div>
+                        <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                          {plan?.dailyPercentage}%
+                        </Badge>
                       </div>
-                      <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
-                        {plan?.dailyPercentage}%
-                      </Badge>
-                    </div>
 
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-gray-400">Progress</span>
-                        <span className="text-gray-300">
-                          {getTotalDays(plan?.createdAt, plan.daysLeft)} days
-                        </span>
-                      </div>
-                      <Progress
-                        value={
-                          ((getTotalDays(plan?.createdAt, plan?.daysLeft) -
-                            plan?.daysLeft) /
-                            getTotalDays(plan?.createdAt, plan.daysLeft)) *
-                          100
-                        }
-                        className="h-2 bg-gray-700"
-                      />
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs text-gray-400">
-                          {plan?.daysLeft} days left
-                        </span>
-                        <span className="text-sm font-semibold text-green-400">
-                          +{formatCurrency(plan?.dailyAmountEarned || 0)}
-                        </span>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-400">Progress</span>
+                          <span className="text-gray-300">
+                            {getTotalDays(plan?.createdAt, plan.daysLeft)} days
+                          </span>
+                        </div>
+                        <Progress
+                          value={
+                            ((getTotalDays(plan?.createdAt, plan?.daysLeft) -
+                              plan?.daysLeft) /
+                              getTotalDays(plan?.createdAt, plan.daysLeft)) *
+                            100
+                          }
+                          className="h-2 bg-gray-700"
+                        />
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs text-gray-400">
+                            {plan?.daysLeft} days left
+                          </span>
+                          <span className="text-sm font-semibold text-green-400">
+                            +{formatCurrency(plan?.dailyAmountEarned || 0)}
+                          </span>
+                        </div>
                       </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-400">No active plans</p>
+                    <p className="text-gray-500 text-sm">
+                      Create your first investment plan to get started
+                    </p>
                   </div>
-                ))}
+                )}
               </CardContent>
             </Card>
           </div>
@@ -1247,56 +1402,67 @@ export default function UserDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {userTransactionHistory?.data?.transactions?.map(
-                  (transaction) => (
-                    <div
-                      key={transaction.transactionId}
-                      className="flex items-center justify-between p-3 md:p-4 bg-gradient-to-r from-gray-800/20 to-gray-700/10 border border-gray-600/20 rounded-lg hover:border-purple-500/30 transition-colors"
-                    >
-                      <div className="flex items-center space-x-3 md:space-x-4 flex-1 min-w-0">
-                        <div className="bg-gray-700/50 p-2 rounded-lg flex-shrink-0">
-                          {getTransactionIcon(transaction?.transactionType)}
+                {userTransactionHistory?.data?.transactions?.length > 0 ? (
+                  userTransactionHistory.data.transactions
+                    .slice(0, 5)
+                    .map((transaction) => (
+                      <div
+                        key={transaction.transactionId}
+                        className="flex items-center justify-between p-3 md:p-4 bg-gradient-to-r from-gray-800/20 to-gray-700/10 border border-gray-600/20 rounded-lg hover:border-purple-500/30 transition-colors"
+                      >
+                        <div className="flex items-center space-x-3 md:space-x-4 flex-1 min-w-0">
+                          <div className="bg-gray-700/50 p-2 rounded-lg flex-shrink-0">
+                            {getTransactionIcon(transaction?.transactionType)}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-white font-medium text-sm truncate">
+                              {transaction?.description}
+                            </p>
+                            <p className="text-gray-400 text-xs">
+                              {formatDate(transaction?.dateTime)} at{" "}
+                              {formatTime(transaction?.dateTime)}
+                            </p>
+                          </div>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-white font-medium text-sm truncate">
-                            {transaction?.description}
-                          </p>
-                          <p className="text-gray-400 text-xs">
-                            {formatDate(transaction?.dateTime)} at{" "}
-                            {formatTime(transaction?.dateTime)}
-                          </p>
-                        </div>
-                      </div>
 
-                      <div className="flex items-center space-x-2 md:space-x-4 flex-shrink-0">
-                        <div className="text-right">
-                          <p
-                            className={`font-semibold text-sm ${
-                              transaction?.transactionType === "deposit"
-                                ? "text-green-400"
-                                : transaction?.transactionType === "withdrawal"
-                                ? "text-red-400"
-                                : "text-blue-400"
+                        <div className="flex items-center space-x-2 md:space-x-4 flex-shrink-0">
+                          <div className="text-right">
+                            <p
+                              className={`font-semibold text-sm ${
+                                transaction?.transactionType === "deposit"
+                                  ? "text-green-400"
+                                  : transaction?.transactionType ===
+                                    "withdrawal"
+                                  ? "text-red-400"
+                                  : "text-blue-400"
+                              }`}
+                            >
+                              {transaction?.transactionType === "withdrawal"
+                                ? "-"
+                                : "+"}
+                              {formatCurrency(transaction?.amount || 0)}
+                            </p>
+                          </div>
+                          <Badge
+                            className={`text-xs ${
+                              transaction?.status === "success"
+                                ? "bg-green-500/20 text-green-400 border-green-500/30"
+                                : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
                             }`}
                           >
-                            {transaction?.transactionType === "withdrawal"
-                              ? "-"
-                              : "+"}
-                            {formatCurrency(transaction?.amount || 0)}
-                          </p>
+                            {transaction?.status}
+                          </Badge>
                         </div>
-                        <Badge
-                          className={`text-xs ${
-                            transaction?.status === "success"
-                              ? "bg-green-500/20 text-green-400 border-green-500/30"
-                              : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                          }`}
-                        >
-                          {transaction?.status}
-                        </Badge>
                       </div>
-                    </div>
-                  )
+                    ))
+                ) : (
+                  <div className="text-center py-8">
+                    <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-400">No transactions yet</p>
+                    <p className="text-gray-500 text-sm">
+                      Your transaction history will appear here
+                    </p>
+                  </div>
                 )}
               </div>
             </CardContent>
@@ -1321,7 +1487,7 @@ export default function UserDashboard() {
               <Calendar className="h-8 w-8 text-blue-400 mx-auto mb-2" />
               <h3 className="text-white font-semibold">Days Invested</h3>
               <p className="text-2xl font-bold text-blue-400">
-                {userInvestmentSummary?.data?.investmentPeriod}
+                {userInvestmentSummary?.data?.investmentPeriod || 0}
               </p>
               <p className="text-xs text-gray-400">Since you started</p>
             </CardContent>
@@ -1403,18 +1569,26 @@ export default function UserDashboard() {
                       />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-800 border-slate-600">
-                      {cryptoList.map((crypto) => (
+                      {Object.entries(supportedCryptos).map(([key, crypto]) => (
                         <SelectItem
-                          key={crypto.id}
-                          value={crypto.id}
+                          key={key}
+                          value={key}
                           className="text-white hover:bg-slate-700"
                         >
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">
-                              {crypto.name} ({crypto.symbol})
-                            </span>
-                            <span className="text-xs text-gray-400">
-                              ${cryptoPrices[crypto.id]?.usd?.toLocaleString()}
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">
+                                {crypto.name} ({crypto.symbol})
+                              </span>
+                              <span className="text-xs text-gray-400">
+                                $
+                                {cryptoPrices[
+                                  crypto.id
+                                ]?.usd?.toLocaleString() || "N/A"}
+                              </span>
+                            </div>
+                            <span className="text-xs text-gray-500">
+                              {crypto.network}
                             </span>
                           </div>
                         </SelectItem>
@@ -1426,7 +1600,9 @@ export default function UserDashboard() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-400">
                       Price: $
-                      {cryptoPrices[selectedCrypto]?.usd?.toLocaleString()}
+                      {cryptoPrices[
+                        supportedCryptos[selectedCrypto]?.id
+                      ]?.usd?.toLocaleString() || "N/A"}
                     </span>
                     <Button
                       variant="ghost"
@@ -1544,21 +1720,20 @@ export default function UserDashboard() {
             <div className="space-y-6">
               <div className="text-center">
                 <h3 className="text-lg font-semibold text-white mb-2">
-                  Send {cryptoList.find((c) => c.id === selectedCrypto)?.symbol}{" "}
-                  to this address:
+                  Send {supportedCryptos[selectedCrypto]?.symbol} to this
+                  address:
                 </h3>
                 <p className="text-gray-300 text-sm">
                   Copy the address below and send your{" "}
-                  {cryptoList.find((c) => c.id === selectedCrypto)?.name}{" "}
-                  deposit
+                  {supportedCryptos[selectedCrypto]?.name} deposit
                 </p>
               </div>
 
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-600">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-gray-400">
-                    {cryptoList.find((c) => c.id === selectedCrypto)?.name}{" "}
-                    Address:
+                    {supportedCryptos[selectedCrypto]?.name} Address (
+                    {supportedCryptos[selectedCrypto]?.network}):
                   </span>
                   <Button
                     variant="ghost"
@@ -1575,17 +1750,19 @@ export default function UserDashboard() {
                     )}
                   </Button>
                 </div>
-                <p className="text-white font-mono text-sm break-all bg-slate-700/50 p-2 rounded">
-                  {walletAddress}
-                </p>
+                <div className="text-white font-mono text-sm break-all bg-slate-700/50 p-2 rounded">
+                  <p className="max-w-[300px] truncate">
+                    {getCurrentWalletAddress()}
+                  </p>
+                </div>
               </div>
 
               <div className="bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-4">
                 <p className="text-yellow-400 text-sm">
-                  ⚠️ Only send{" "}
-                  {cryptoList.find((c) => c.id === selectedCrypto)?.symbol} to
-                  this address. Sending other cryptocurrencies may result in
-                  permanent loss.
+                  ⚠️ Only send {supportedCryptos[selectedCrypto]?.symbol} on the{" "}
+                  {supportedCryptos[selectedCrypto]?.network} network to this
+                  address. Sending other cryptocurrencies or using wrong
+                  networks may result in permanent loss.
                 </p>
               </div>
 
@@ -1690,18 +1867,26 @@ export default function UserDashboard() {
                       />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-800 border-slate-600">
-                      {cryptoList.map((crypto) => (
+                      {Object.entries(supportedCryptos).map(([key, crypto]) => (
                         <SelectItem
-                          key={crypto.id}
-                          value={crypto.id}
+                          key={key}
+                          value={key}
                           className="text-white hover:bg-slate-700"
                         >
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">
-                              {crypto.name} ({crypto.symbol})
-                            </span>
-                            <span className="text-xs text-gray-400">
-                              ${cryptoPrices[crypto.id]?.usd?.toLocaleString()}
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">
+                                {crypto.name} ({crypto.symbol})
+                              </span>
+                              <span className="text-xs text-gray-400">
+                                $
+                                {cryptoPrices[
+                                  crypto.id
+                                ]?.usd?.toLocaleString() || "N/A"}
+                              </span>
+                            </div>
+                            <span className="text-xs text-gray-500">
+                              {crypto.network}
                             </span>
                           </div>
                         </SelectItem>
@@ -1764,7 +1949,6 @@ export default function UserDashboard() {
                   onClick={handleDepositSubmit}
                   className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
                 >
-                  
                   {isLoading ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -1797,28 +1981,20 @@ export default function UserDashboard() {
             <div className="space-y-6">
               <div className="text-center">
                 <h3 className="text-lg font-semibold text-white mb-2">
-                  Send{" "}
-                  {
-                    cryptoList.find((c) => c.id === depositSelectedCrypto)
-                      ?.symbol
-                  }{" "}
-                  to this address:
+                  Send {supportedCryptos[depositSelectedCrypto]?.symbol} to this
+                  address:
                 </h3>
                 <p className="text-gray-300 text-sm">
                   Copy the address below and send your{" "}
-                  {cryptoList.find((c) => c.id === depositSelectedCrypto)?.name}{" "}
-                  deposit
+                  {supportedCryptos[depositSelectedCrypto]?.name} deposit
                 </p>
               </div>
 
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-600">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-gray-400">
-                    {
-                      cryptoList.find((c) => c.id === depositSelectedCrypto)
-                        ?.name
-                    }{" "}
-                    Address:
+                    {supportedCryptos[depositSelectedCrypto]?.name} Address (
+                    {supportedCryptos[depositSelectedCrypto]?.network}):
                   </span>
                   <Button
                     variant="ghost"
@@ -1836,19 +2012,16 @@ export default function UserDashboard() {
                   </Button>
                 </div>
                 <p className="text-white font-mono text-sm break-all bg-slate-700/50 p-2 rounded">
-                  {walletAddress}
+                  {getCurrentWalletAddress()}
                 </p>
               </div>
 
               <div className="bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-4">
                 <p className="text-yellow-400 text-sm">
-                  ⚠️ Only send{" "}
-                  {
-                    cryptoList.find((c) => c.id === depositSelectedCrypto)
-                      ?.symbol
-                  }{" "}
-                  to this address. Sending other cryptocurrencies may result in
-                  permanent loss.
+                  ⚠️ Only send {supportedCryptos[depositSelectedCrypto]?.symbol}{" "}
+                  on the {supportedCryptos[depositSelectedCrypto]?.network}{" "}
+                  network to this address. Sending other cryptocurrencies or
+                  using wrong networks may result in permanent loss.
                 </p>
               </div>
 
@@ -1876,7 +2049,8 @@ export default function UserDashboard() {
       </Dialog>
 
       {/* Withdraw Modal */}
-      <Dialog open={withdrawModal} onOpenChange={setWithdrawModal}>
+
+      <Dialog open={withdrawModal} onOpenChange={closeWithdrawModal}>
         <DialogContent className="sm:max-w-md bg-gradient-to-br from-slate-900 to-purple-900/50 border-purple-500/30 backdrop-blur-sm">
           <DialogHeader>
             <DialogTitle className="text-white text-center text-xl flex items-center justify-center gap-2">
@@ -1915,15 +2089,14 @@ export default function UserDashboard() {
                 onClick={handleConnectWallet}
                 className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
               >
-                 {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    "Connect Wallet"
-                  )}
-                
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  "Connect Wallet"
+                )}
               </Button>
             </div>
           </div>

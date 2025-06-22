@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { AlertCircle, CheckCircle, XCircle, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/useToast"
+import { baseUrl } from "@/features/api/apiSlice"
 
 const ADMIN_USERNAME = "LunoVest"
 const ADMIN_PASSWORD = "LunoVest123#"
@@ -50,7 +51,7 @@ export default function AdminPage() {
   const fetchTransactions = async (page = 1) => {
     setLoading(true)
     try {
-      const response = await fetch(`http://localhost:8000/api/admin/pending-transactions?page=${page}&limit=30`)
+      const response = await fetch(`${baseUrl}/admin/pending-transactions?page=${page}&limit=30`)
       const data = await response.json()
 
       if (data.success) {
@@ -87,7 +88,7 @@ export default function AdminPage() {
 
     setProcessingTransaction(selectedTransaction.transactionId)
     try {
-      const response = await fetch("http://localhost:8000/api/admin/update-transaction-status", {
+      const response = await fetch("${baseUrl}/admin/update-transaction-status", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

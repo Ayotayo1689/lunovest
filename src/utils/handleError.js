@@ -5,16 +5,24 @@ import { toast } from "react-toastify"
  * Handles different types of API responses and displays appropriate messages
  */
 export const handleError = (error, response = null, data = null) => {
-  console.error("API Error:", { error, response, data })
+  console.error("API Error:",  error)
 
+  if (error?.data.errors) {
+    
+    toast.error(error?.data.errors[0], {
+      style: { background: "#fff", color: "#000" },
+      position: "top-right",
+      autoClose: 8000,
+    })
+    return {
+      type: "VALIDATION_ERROR",
+      message: "Validation error",
+      // shouldRetry: true,
+    }
+  }
   // Network/Connection Errors
   if (error?.name === "TypeError" && error?.message === "Failed to fetch") {
-    // toast.error("Unable to reach the server. Please check your internet connection or try again later.", {
-    //   style: { background: "#fff", color: "#000" },
-    //   position: "top-right",
-    //   autoClose: 5000,
-    // })
-    toast.error(error, {
+    toast.error("Unable to reach the server. Please check your internet connection or try again later.", {
       style: { background: "#fff", color: "#000" },
       position: "top-right",
       autoClose: 5000,
@@ -28,16 +36,11 @@ export const handleError = (error, response = null, data = null) => {
 
   // Handle fetch errors
   if (error?.status === "FETCH_ERROR" || !response) {
-    toast.error(error, {
+    toast.error("Unable to reach the server. Please try again later or contact support.", {
       style: { background: "#fff", color: "#000" },
       position: "top-right",
       autoClose: 5000,
     })
-    // toast.error("Unable to reach the server. Please try again later or contact support.", {
-    //   style: { background: "#fff", color: "#000" },
-    //   position: "top-right",
-    //   autoClose: 5000,
-    // })
     return {
       type: "FETCH_ERROR",
       message: "Server unreachable",

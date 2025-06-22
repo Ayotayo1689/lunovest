@@ -320,7 +320,7 @@ export default function UserDashboard() {
           <p className="text-green-400">
             Balance: {formatCurrency(data.balance)}
           </p>
-          <p className="text-gray-300 text-sm">{data.description}</p>
+          {/* <p className="text-gray-300 text-sm">{data.description}</p> */}
           <p
             className={`text-sm ${
               data.type === "deposit"
@@ -1051,6 +1051,10 @@ export default function UserDashboard() {
                       Profile
                     </Button>
                     <Button
+                      onClick={() => {
+                        localStorage.clear();
+                        navigate("/");
+                      }}
                       variant="ghost"
                       className="text-gray-300 hover:text-white hover:bg-white/10 justify-start"
                     >
@@ -1082,10 +1086,8 @@ export default function UserDashboard() {
                 {userData.membershipLevel} Member
               </Badge>
             </div>
-           
           </div>
         </div>
-
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
           <Card className="bg-gradient-to-br from-purple-900/30 to-cyan-900/20 border-purple-500/30 backdrop-blur-sm">
@@ -1186,25 +1188,35 @@ export default function UserDashboard() {
               </p>
             </CardContent>
           </Card>
-        </div> <div className="flex mb-8 flex-col sm:flex-row gap-3">
+        </div>{" "}
+        <div className="flex justify-between mb-8 flex-col sm:flex-row gap-3">
+          <div className="flex mb-8 flex-col sm:flex-row gap-3">
+            <Button
+              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+              onClick={handleDepositClick}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Deposit
+            </Button>
+            {shouldShowWithdrawButton() && (
               <Button
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
-                onClick={handleDepositClick}
+                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
+                onClick={handleWithdrawClick}
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Deposit
+                <Minus className="h-4 w-4 mr-2" />
+                Withdraw
               </Button>
-              {shouldShowWithdrawButton() && (
-                <Button
-                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
-                  onClick={handleWithdrawClick}
-                >
-                  <Minus className="h-4 w-4 mr-2" />
-                  Withdraw
-                </Button>
-              )}
-            </div>
+            )}
+          </div>
 
+          <Button
+            className=" bg-[#ffffff27] border-white hover:from-blue-700 hover:to-cyan-700 text-white"
+            onClick={handleCreatePlanClick}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create Plan
+          </Button>
+        </div>
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
           {/* Investment Growth Chart */}
@@ -1377,7 +1389,6 @@ export default function UserDashboard() {
             </Card>
           </div>
         </div>
-
         {/* Recent Transactions */}
         <div className="mt-8">
           <Card className="bg-gradient-to-br from-slate-900/50 to-purple-900/20 border-purple-500/30 backdrop-blur-sm">
@@ -1468,7 +1479,6 @@ export default function UserDashboard() {
             </CardContent>
           </Card>
         </div>
-
         {/* Quick Stats Footer */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border-purple-500/30 backdrop-blur-sm">

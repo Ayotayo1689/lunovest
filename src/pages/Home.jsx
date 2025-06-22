@@ -403,7 +403,45 @@ export default function Home() {
                 >
                   FAQ
                 </a>
-                <div className="flex flex-col space-y-2 pt-4">
+
+                {
+                  userData1 !== null ? <div className="border-t border-purple-500/20 pt-4">
+                                    <div className="flex items-center space-x-2 mb-4">
+                                      <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-full flex items-center justify-center">
+                                        <User className="h-4 w-4 text-white" />
+                                      </div>
+                                      <span className="text-white">
+                                        {parsedUserData?.firstName} {parsedUserData?.lastName}
+                                      </span>
+                                    </div>
+                                    <div className="flex flex-col space-y-2">
+                                      <Button
+                                        variant="ghost"
+                                        className="text-gray-300 hover:text-white hover:bg-white/10 justify-start"
+                                      >
+                                        <Settings className="h-4 w-4 mr-2" />
+                                        Settings
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        className="text-gray-300 hover:text-white hover:bg-white/10 justify-start"
+                                      >
+                                        <User className="h-4 w-4 mr-2" />
+                                        Profile
+                                      </Button>
+                                      <Button
+                                        onClick={() => {
+                                          localStorage.clear();
+                                        window.location.reload();
+                                        }}
+                                        variant="ghost"
+                                        className="text-gray-300 hover:text-white hover:bg-white/10 justify-start"
+                                      >
+                                        <LogOut className="h-4 w-4 mr-2" />
+                                        Logout
+                                      </Button>
+                                    </div>
+                                  </div> :  <div className="flex flex-col space-y-2 pt-4">
                   <Button
                     variant="ghost"
                     className="text-purple-400 hover:text-white hover:bg-purple-500/20 justify-start"
@@ -418,6 +456,8 @@ export default function Home() {
                     Get Started
                   </Button>
                 </div>
+                }
+               
               </div>
             </div>
           )}

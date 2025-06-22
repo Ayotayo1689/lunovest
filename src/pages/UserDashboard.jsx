@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import BigLogo from "../assets/biglogo.png";
@@ -26,6 +24,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
   TrendingUp,
   DollarSign,
   Wallet,
@@ -38,7 +45,6 @@ import {
   Settings,
   User,
   LogOut,
-  Bitcoin,
   Plus,
   Minus,
   Eye,
@@ -55,15 +61,358 @@ import {
   Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
+import { useNavigate } from "react-router-dom";
+import formatTimeAgo from "../utils/formatTimeAgo";
+import { useApiGet, useApiPost } from "@/hooks/useApi";
+import { formatDate, formatTime } from "@/utils/formatDate";
 
 export default function UserDashboard() {
+  const { post, isLoading } = useApiPost();
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [depositModal, setDepositModal] = useState(false);
   const [withdrawModal, setWithdrawModal] = useState(false);
+  const [createPlanModal, setCreatePlanModal] = useState(false);
   const [depositStep, setDepositStep] = useState("generating"); // generating, address, completed
+  const [createPlanStep, setCreatePlanStep] = useState("form"); // form, generating, address
   const [addressCopied, setAddressCopied] = useState(false);
+
+  // Create Plan Form State
+  const [selectedPlan, setSelectedPlan] = useState("");
+  const [selectedCrypto, setSelectedCrypto] = useState("");
+  const [amount, setAmount] = useState("");
+  const [cryptoAmount, setCryptoAmount] = useState("");
+  const [cryptoList, setCryptoList] = useState([]);
+  const [cryptoPrices, setCryptoPrices] = useState({});
+  const [loadingCrypto, setLoadingCrypto] = useState(false);
+
+  // Deposit Form State
+  const [selectedDepositPlan, setSelectedDepositPlan] = useState("");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [depositCryptoAmount, setDepositCryptoAmount] = useState("");
+  const [depositSelectedCrypto, setDepositSelectedCrypto] = useState("");
+
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const userData1 = localStorage.getItem("userData");
+  const parsedUserData = JSON.parse(userData1);
+  console.log(userData1);
+
+  useEffect(() => {
+    if (userData1 === null) {
+      navigate("/");
+    }
+  }, [userData1]);
+ 
+
+  const {
+    data: userPlans,
+    isLoading: isLoadingUserPlans,
+    error: errorPlans,
+    refetch: refetchPlans,
+  } = useApiGet(`investment/plans/${parsedUserData?.userId}`);
+
+  const {
+    data: userInvestmentSummary,
+    isLoading: isLoadingUserInvestmentSummary,
+    error: errorInvestmentSummary,
+    refetch: refetchInvestmentSummary,
+  } = useApiGet(`investment/summary/${parsedUserData?.userId}`);
+
+  const {
+    data: userTransactionHistory,
+    isLoading: isLoadingUserTransactionHistory,
+    error: errorTransactionHistory,
+    refetch: refetchTransactionHistory,
+  } = useApiGet(
+    `investment/transactions/${parsedUserData?.userId}?page=1&limit=5`
+  );
+
+  useEffect(() => {
+    console.log(userPlans);
+  }, [userPlans]);
+
+  // Available investment plans
+  const investmentPlans = [
+    {
+      planName: "Starter",
+      planId: "starter",
+      dailyPercentage: 5,
+      withdrawalDay: 30,
+      minimumAmount: 100,
+    },
+    {
+      planName: "Premium",
+      planId: "premium",
+      dailyPercentage: 10,
+      withdrawalDay: 60,
+      minimumAmount: 500,
+    },
+    {
+      planName: "Professional",
+      planId: "professional",
+      dailyPercentage: 15,
+      withdrawalDay: 90,
+      minimumAmount: 1000,
+    },
+    {
+      planName: "Enterprise",
+      planId: "enterprise",
+      dailyPercentage: 20,
+      withdrawalDay: 120,
+      minimumAmount: 5000,
+    },
+  ];
+
+  // Mock crypto data as fallback
+  const mockCryptoData = {
+    cryptoList: [
+      { id: "bitcoin", name: "Bitcoin", symbol: "BTC" },
+      { id: "ethereum", name: "Ethereum", symbol: "ETH" },
+      { id: "binancecoin", name: "BNB", symbol: "BNB" },
+      { id: "cardano", name: "Cardano", symbol: "ADA" },
+      { id: "solana", name: "Solana", symbol: "SOL" },
+      { id: "polkadot", name: "Polkadot", symbol: "DOT" },
+      { id: "dogecoin", name: "Dogecoin", symbol: "DOGE" },
+      { id: "avalanche-2", name: "Avalanche", symbol: "AVAX" },
+      { id: "polygon", name: "Polygon", symbol: "MATIC" },
+      { id: "chainlink", name: "Chainlink", symbol: "LINK" },
+    ],
+    prices: {
+      bitcoin: { usd: 43250 },
+      ethereum: { usd: 2650 },
+      binancecoin: { usd: 315 },
+      cardano: { usd: 0.52 },
+      solana: { usd: 98 },
+      polkadot: { usd: 7.2 },
+      dogecoin: { usd: 0.085 },
+      "avalanche-2": { usd: 36 },
+      polygon: { usd: 0.89 },
+      chainlink: { usd: 14.5 },
+    },
+  };
+
+  // Fetch crypto data from CoinGecko with caching and rate limiting
+  useEffect(() => {
+    const fetchCryptoData = async () => {
+      // Check if we have cached data that's less than 5 minutes old
+      const cachedData = localStorage.getItem("cryptoData");
+      const cacheTimestamp = localStorage.getItem("cryptoDataTimestamp");
+      const now = Date.now();
+      const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+      if (
+        cachedData &&
+        cacheTimestamp &&
+        now - Number.parseInt(cacheTimestamp) < fiveMinutes
+      ) {
+        console.log("Using cached crypto data");
+        const parsed = JSON.parse(cachedData);
+        setCryptoList(parsed.cryptoList);
+        setCryptoPrices(parsed.prices);
+        setLoadingCrypto(false);
+        return;
+      }
+
+      setLoadingCrypto(true);
+
+      try {
+        // Add a random delay to spread out API calls
+        const randomDelay = Math.random() * 2000; // 0-2 seconds
+        await new Promise((resolve) => setTimeout(resolve, randomDelay));
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+        const response = await fetch(
+          "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,cardano,solana,polkadot,dogecoin,avalanche-2,polygon,chainlink&vs_currencies=usd",
+          {
+            signal: controller.signal,
+            mode: "cors",
+            headers: {
+              Accept: "application/json",
+            },
+          }
+        );
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Cache the successful response
+        const cacheData = {
+          cryptoList: mockCryptoData.cryptoList,
+          prices: data,
+        };
+        localStorage.setItem("cryptoData", JSON.stringify(cacheData));
+        localStorage.setItem("cryptoDataTimestamp", now.toString());
+
+        setCryptoList(mockCryptoData.cryptoList);
+        setCryptoPrices(data);
+
+        console.log(
+          "Successfully fetched and cached crypto data from CoinGecko"
+        );
+      } catch (error) {
+        console.warn(
+          "CoinGecko API failed, using fallback data:",
+          error.message
+        );
+
+        // Try to use any cached data, even if expired
+        const cachedData = localStorage.getItem("cryptoData");
+        if (cachedData) {
+          console.log("Using expired cached data as fallback");
+          const parsed = JSON.parse(cachedData);
+          setCryptoList(parsed.cryptoList);
+          setCryptoPrices(parsed.prices);
+
+          toast({
+            title: "Using Cached Data",
+            description: "Cryptocurrency prices may be outdated",
+            variant: "default",
+          });
+        } else {
+          // Use mock data as final fallback
+          setCryptoList(mockCryptoData.cryptoList);
+          setCryptoPrices(mockCryptoData.prices);
+
+          toast({
+            title: "Using Offline Data",
+            description: "Cryptocurrency prices may not be current",
+            variant: "default",
+          });
+        }
+      } finally {
+        setLoadingCrypto(false);
+      }
+    };
+
+    fetchCryptoData();
+  }, []); // Only run once when component mounts
+
+  // Add this function after the useEffect
+  const refreshCryptoPrices = async () => {
+    // Clear cache to force fresh data
+    localStorage.removeItem("cryptoData");
+    localStorage.removeItem("cryptoDataTimestamp");
+
+    setLoadingCrypto(true);
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+      const response = await fetch(
+        "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,cardano,solana,polkadot,dogecoin,avalanche-2,polygon,chainlink&vs_currencies=usd",
+        {
+          signal: controller.signal,
+          mode: "cors",
+          headers: {
+            Accept: "application/json",
+          },
+        }
+      );
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Cache the successful response
+      const cacheData = {
+        cryptoList: mockCryptoData.cryptoList,
+        prices: data,
+      };
+      localStorage.setItem("cryptoData", JSON.stringify(cacheData));
+      localStorage.setItem("cryptoDataTimestamp", Date.now().toString());
+
+      setCryptoPrices(data);
+
+      toast({
+        title: "Prices Updated",
+        description: "Cryptocurrency prices have been refreshed",
+      });
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description: "Could not refresh prices, using cached data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingCrypto(false);
+    }
+  };
+
+  // Convert USD to crypto amount
+  const convertToCrypto = (usdAmount, cryptoId) => {
+    if (!usdAmount || !cryptoId || !cryptoPrices[cryptoId]) return "";
+    const price = cryptoPrices[cryptoId].usd;
+    return (Number.parseFloat(usdAmount) / price).toFixed(8);
+  };
+
+  // Convert crypto to USD amount
+  const convertToUSD = (cryptoAmount, cryptoId) => {
+    if (!cryptoAmount || !cryptoId || !cryptoPrices[cryptoId]) return "";
+    const price = cryptoPrices[cryptoId].usd;
+    return (Number.parseFloat(cryptoAmount) * price).toFixed(2);
+  };
+
+  // Handle amount change for create plan
+  const handleAmountChange = (value) => {
+    setAmount(value);
+    if (selectedCrypto) {
+      setCryptoAmount(convertToCrypto(value, selectedCrypto));
+    }
+  };
+
+  // Handle crypto amount change for create plan
+  const handleCryptoAmountChange = (value) => {
+    setCryptoAmount(value);
+    if (selectedCrypto) {
+      setAmount(convertToUSD(value, selectedCrypto));
+    }
+  };
+
+  // Handle crypto selection for create plan
+  const handleCryptoSelect = (cryptoId) => {
+    setSelectedCrypto(cryptoId);
+    if (amount) {
+      setCryptoAmount(convertToCrypto(amount, cryptoId));
+    }
+  };
+
+  // Handle amount change for deposit
+  const handleDepositAmountChange = (value) => {
+    setDepositAmount(value);
+    if (depositSelectedCrypto) {
+      setDepositCryptoAmount(convertToCrypto(value, depositSelectedCrypto));
+    }
+  };
+
+  // Handle crypto amount change for deposit
+  const handleDepositCryptoAmountChange = (value) => {
+    setDepositCryptoAmount(value);
+    if (depositSelectedCrypto) {
+      setDepositAmount(convertToUSD(value, depositSelectedCrypto));
+    }
+  };
+
+  // Handle crypto selection for deposit
+  const handleDepositCryptoSelect = (cryptoId) => {
+    setDepositSelectedCrypto(cryptoId);
+    if (depositAmount) {
+      setDepositCryptoAmount(convertToCrypto(depositAmount, cryptoId));
+    }
+  };
 
   // Mock wallet address
   const walletAddress = "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh";
@@ -167,27 +516,160 @@ export default function UserDashboard() {
     },
   ];
 
+  // Handle create plan modal steps
+  useEffect(() => {
+    if (createPlanModal && createPlanStep === "generating") {
+      const timer = setTimeout(() => {
+        setCreatePlanStep("address");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [createPlanModal, createPlanStep]);
+
   // Handle deposit modal
   useEffect(() => {
     if (depositModal && depositStep === "generating") {
       const timer = setTimeout(() => {
         setDepositStep("address");
-      }, 5000);
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, [depositModal, depositStep]);
 
   const handleDepositClick = () => {
     setDepositModal(true);
-    setDepositStep("generating");
+    setDepositStep("planSelection");
     setAddressCopied(false);
   };
 
   const handleCreatePlanClick = () => {
-    setDepositModal(true);
-    setDepositStep("createPlan");
+    setCreatePlanModal(true);
+    setCreatePlanStep("form");
     setAddressCopied(false);
   };
+
+  // Submit create plan
+  const handleCreatePlanSubmit = async () => {
+    if (!selectedPlan || !selectedCrypto || !amount || !cryptoAmount) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const planData = investmentPlans.find((p) => p.planId === selectedPlan);
+    const cryptoData = cryptoList.find((c) => c.id === selectedCrypto);
+
+    if (Number.parseFloat(amount) < planData.minimumAmount) {
+      toast({
+        title: "Error",
+        description: `Minimum amount for ${planData.planName} plan is $${planData.minimumAmount}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const payload = {
+      userId: parsedUserData.userId,
+      investmentPlanName: planData.planName,
+      investmentPlanId: planData.planId,
+      dailyPercentage: planData.dailyPercentage,
+      withdrawalDay: planData.withdrawalDay,
+      amount: Number.parseFloat(amount),
+      currency: "USD",
+      amountInCrypto: Number.parseFloat(cryptoAmount),
+      cryptoCoinName: cryptoData.symbol,
+    };
+
+    try {
+      const response = await post("investment/create-plan", payload, true);
+      console.log(response);
+
+      if (response.success) {
+        setCreatePlanStep("generating");
+        toast({
+          title: "Success",
+          description: "Investment plan created successfully!",
+        });
+      } else {
+        toast({
+          title: "Something went wrong.",
+          description: response?.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create investment plan",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Submit deposit
+  const handleDepositSubmit = async () => {
+    if (
+      !selectedDepositPlan ||
+      !depositSelectedCrypto ||
+      !depositAmount ||
+      !depositCryptoAmount
+    ) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const cryptoData = cryptoList.find((c) => c.id === depositSelectedCrypto);
+
+    const payload = {
+      investmentPlanId: selectedDepositPlan,
+      userId: parsedUserData.userId,
+      amount: Number.parseFloat(depositAmount),
+      amountInCrypto: Number.parseFloat(depositCryptoAmount),
+      cryptoCoinName: cryptoData.symbol,
+    };
+
+    try {
+      const response = await post("/investment/deposit", payload, true);
+
+      if (response.success) {
+        setDepositStep("generating");
+        toast({
+          title: "Success",
+          description: "Deposit initiated successfully!",
+        });
+      } else {
+        toast({
+          title: "Something went wrong.",
+          description: response?.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to process deposit",
+        variant: "destructive",
+      });
+    }
+  };
+
+  function getTotalDays(startDateString, daysLeft) {
+    const startDate = new Date(startDateString);
+    const futureDate = new Date(startDate);
+    futureDate.setDate(startDate.getDate() + daysLeft);
+
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const totalDays = Math.round((futureDate - startDate) / msPerDay);
+
+    return totalDays;
+  }
 
   const handleCopyAddress = async () => {
     try {
@@ -208,11 +690,23 @@ export default function UserDashboard() {
 
   const handleDepositComplete = () => {
     setDepositModal(false);
-    setDepositStep("generating");
+    setDepositStep("planSelection");
     setAddressCopied(false);
     toast({
       title: "Deposit Initiated!",
       description: "Your deposit will be processed within 10 minutes",
+    });
+  };
+
+  const handleCreatePlanComplete = () => {
+    setCreatePlanModal(false);
+    setCreatePlanStep("form");
+    setAddressCopied(false);
+    refetchPlans();
+    refetchInvestmentSummary();
+    toast({
+      title: "Plan Created!",
+      description: "Your investment plan has been created successfully",
     });
   };
 
@@ -222,13 +716,23 @@ export default function UserDashboard() {
 
   const handleConnectWallet = () => {
     setWithdrawModal(false);
-    window.location.href = "/connect_wallet";
+    navigate("/connect_wallet");
   };
 
   const closeDepositModal = () => {
     setDepositModal(false);
-    setDepositStep("generating");
+    setDepositStep("planSelection");
     setAddressCopied(false);
+  };
+
+  const closeCreatePlanModal = () => {
+    setCreatePlanModal(false);
+    setCreatePlanStep("form");
+    setAddressCopied(false);
+    setSelectedPlan("");
+    setSelectedCrypto("");
+    setAmount("");
+    setCryptoAmount("");
   };
 
   const formatCurrency = (amount) => {
@@ -258,7 +762,7 @@ export default function UserDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center ">
-              <img src={BigLogo} alt="" width={"100px"} />
+              <img src={BigLogo || "/placeholder.svg"} alt="" width={"100px"} />
             </div>
 
             {/* Desktop Navigation */}
@@ -310,7 +814,9 @@ export default function UserDashboard() {
                       <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-full flex items-center justify-center">
                         <User className="h-4 w-4 text-white" />
                       </div>
-                      <span>{userData.name}</span>
+                      <span>
+                        {parsedUserData?.firstName} {parsedUserData?.lastName}
+                      </span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
@@ -325,7 +831,13 @@ export default function UserDashboard() {
                       <User className="h-4 w-4 mr-2" />
                       Profile
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="text-white hover:bg-slate-700">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        localStorage.clear();
+                        navigate("/");
+                      }}
+                      className="text-white hover:bg-slate-700"
+                    >
                       <LogOut className="h-4 w-4 mr-2" />
                       Logout
                     </DropdownMenuItem>
@@ -380,7 +892,9 @@ export default function UserDashboard() {
                     <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-full flex items-center justify-center">
                       <User className="h-4 w-4 text-white" />
                     </div>
-                    <span className="text-white">{userData.name}</span>
+                    <span className="text-white">
+                      {parsedUserData?.firstName} {parsedUserData?.lastName}
+                    </span>
                   </div>
                   <div className="flex flex-col space-y-2">
                     <Button
@@ -418,11 +932,11 @@ export default function UserDashboard() {
           <div className="flex flex-col space-y-4">
             <div>
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold  text-white">
-                Welcome back, {userData.name.split(" ")[0]}! 👋
+                Welcome back, {parsedUserData?.firstName}! 👋
               </h1>
               <p className="text-gray-300 mt-2 text-sm md:text-base">
-                Member since {userData.joinDate} • Last login:{" "}
-                {userData.lastLogin}
+                Member since {formatTimeAgo(parsedUserData?.registeredAt)} •
+                Last login: {formatTimeAgo(parsedUserData?.lastLogin)}
               </p>
               <Badge className="mt-2 bg-gradient-to-r from-purple-600 to-cyan-600 text-white">
                 <Award className="h-3 w-3 mr-1" />
@@ -461,7 +975,9 @@ export default function UserDashboard() {
               <div className="flex items-center justify-between">
                 <div className="text-lg md:text-2xl font-bold text-white">
                   {balanceVisible
-                    ? formatCurrency(userData.totalInvested)
+                    ? formatCurrency(
+                        userInvestmentSummary?.data?.totalInvestment || 0
+                      )
                     : "••••••"}
                 </div>
                 <Button
@@ -478,7 +994,7 @@ export default function UserDashboard() {
                 </Button>
               </div>
               <p className="text-xs text-gray-400 mt-1">
-                Since {userData.joinDate}
+                Since {formatTimeAgo(parsedUserData?.registeredAt)}
               </p>
             </CardContent>
           </Card>
@@ -493,15 +1009,21 @@ export default function UserDashboard() {
             <CardContent>
               <div className="text-lg md:text-2xl font-bold text-white">
                 {balanceVisible
-                  ? formatCurrency(userData.currentBalance)
-                  : "••••••"}
+                  ? formatCurrency(
+                      userInvestmentSummary?.data?.totalInvestment +
+                        userInvestmentSummary?.data?.totalProfit
+                    )
+                  : "••••••"}{" "}
               </div>
               <p className="text-xs text-green-400 mt-1">
                 +
                 {(
-                  (userData.currentBalance / userData.totalInvested - 1) *
+                  ((userInvestmentSummary?.data?.totalInvestment +
+                    userInvestmentSummary?.data?.totalProfit) /
+                    userInvestmentSummary?.data?.totalInvestment -
+                    1) *
                   100
-                ).toFixed(1)}
+                ).toFixed(0)}
                 % growth
               </p>
             </CardContent>
@@ -517,11 +1039,13 @@ export default function UserDashboard() {
             <CardContent>
               <div className="text-lg md:text-2xl font-bold text-white">
                 {balanceVisible
-                  ? formatCurrency(userData.totalProfit)
+                  ? formatCurrency(
+                      userInvestmentSummary?.data?.totalProfit || 0
+                    )
                   : "••••••"}
               </div>
               <p className="text-xs text-blue-400 mt-1">
-                +{userData.profitPercentage}% return
+                {/* +{userPlans.dailyPercentage}% return */}
               </p>
             </CardContent>
           </Card>
@@ -535,7 +1059,7 @@ export default function UserDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-lg md:text-2xl font-bold text-white">
-                {userData.activePlans}
+                {userInvestmentSummary?.data?.activePlansCount || 0}
               </div>
               <p className="text-xs text-yellow-400 mt-1">
                 Investment plans running
@@ -599,7 +1123,7 @@ export default function UserDashboard() {
                             {item.date}
                           </span>
                           <span className="text-gray-400 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                            {formatCurrency(item.balance)}
+                            {formatCurrency(item.balance || 0)}
                           </span>
                         </div>
                       );
@@ -647,7 +1171,7 @@ export default function UserDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {activePlans.map((plan, index) => (
+                {userPlans?.data?.map((plan, index) => (
                   <div
                     key={index}
                     className="bg-gradient-to-r from-gray-800/30 to-gray-700/20 border border-gray-600/30 rounded-lg p-4 hover:border-purple-500/30 transition-colors"
@@ -655,14 +1179,15 @@ export default function UserDashboard() {
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <h4 className="text-white font-semibold text-sm">
-                          {plan.name}
+                          {plan?.investmentPlanName}
                         </h4>
                         <p className="text-gray-400 text-xs">
-                          {formatCurrency(plan.amount)} invested
+                          {formatCurrency(plan?.totalAmountInvested || 0)}{" "}
+                          invested
                         </p>
                       </div>
                       <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
-                        {plan.dailyReturn}
+                        {plan?.dailyPercentage}%
                       </Badge>
                     </div>
 
@@ -670,22 +1195,24 @@ export default function UserDashboard() {
                       <div className="flex justify-between text-xs">
                         <span className="text-gray-400">Progress</span>
                         <span className="text-gray-300">
-                          {plan.totalDays - plan.daysLeft}/{plan.totalDays} days
+                          {getTotalDays(plan?.createdAt, plan.daysLeft)} days
                         </span>
                       </div>
                       <Progress
                         value={
-                          ((plan.totalDays - plan.daysLeft) / plan.totalDays) *
+                          ((getTotalDays(plan?.createdAt, plan?.daysLeft) -
+                            plan?.daysLeft) /
+                            getTotalDays(plan?.createdAt, plan.daysLeft)) *
                           100
                         }
                         className="h-2 bg-gray-700"
                       />
                       <div className="flex justify-between items-center">
                         <span className="text-xs text-gray-400">
-                          {plan.daysLeft} days left
+                          {plan?.daysLeft} days left
                         </span>
                         <span className="text-sm font-semibold text-green-400">
-                          +{formatCurrency(plan.profit)}
+                          +{formatCurrency(plan?.dailyAmountEarned || 0)}
                         </span>
                       </div>
                     </div>
@@ -720,52 +1247,57 @@ export default function UserDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentTransactions.map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between p-3 md:p-4 bg-gradient-to-r from-gray-800/20 to-gray-700/10 border border-gray-600/20 rounded-lg hover:border-purple-500/30 transition-colors"
-                  >
-                    <div className="flex items-center space-x-3 md:space-x-4 flex-1 min-w-0">
-                      <div className="bg-gray-700/50 p-2 rounded-lg flex-shrink-0">
-                        {getTransactionIcon(transaction.type)}
+                {userTransactionHistory?.data?.transactions?.map(
+                  (transaction) => (
+                    <div
+                      key={transaction.transactionId}
+                      className="flex items-center justify-between p-3 md:p-4 bg-gradient-to-r from-gray-800/20 to-gray-700/10 border border-gray-600/20 rounded-lg hover:border-purple-500/30 transition-colors"
+                    >
+                      <div className="flex items-center space-x-3 md:space-x-4 flex-1 min-w-0">
+                        <div className="bg-gray-700/50 p-2 rounded-lg flex-shrink-0">
+                          {getTransactionIcon(transaction?.transactionType)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-white font-medium text-sm truncate">
+                            {transaction?.description}
+                          </p>
+                          <p className="text-gray-400 text-xs">
+                            {formatDate(transaction?.dateTime)} at{" "}
+                            {formatTime(transaction?.dateTime)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-white font-medium text-sm truncate">
-                          {transaction.description}
-                        </p>
-                        <p className="text-gray-400 text-xs">
-                          {transaction.date} at {transaction.time}
-                        </p>
-                      </div>
-                    </div>
 
-                    <div className="flex items-center space-x-2 md:space-x-4 flex-shrink-0">
-                      <div className="text-right">
-                        <p
-                          className={`font-semibold text-sm ${
-                            transaction.type === "deposit"
-                              ? "text-green-400"
-                              : transaction.type === "withdrawal"
-                              ? "text-red-400"
-                              : "text-blue-400"
+                      <div className="flex items-center space-x-2 md:space-x-4 flex-shrink-0">
+                        <div className="text-right">
+                          <p
+                            className={`font-semibold text-sm ${
+                              transaction?.transactionType === "deposit"
+                                ? "text-green-400"
+                                : transaction?.transactionType === "withdrawal"
+                                ? "text-red-400"
+                                : "text-blue-400"
+                            }`}
+                          >
+                            {transaction?.transactionType === "withdrawal"
+                              ? "-"
+                              : "+"}
+                            {formatCurrency(transaction?.amount || 0)}
+                          </p>
+                        </div>
+                        <Badge
+                          className={`text-xs ${
+                            transaction?.status === "success"
+                              ? "bg-green-500/20 text-green-400 border-green-500/30"
+                              : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
                           }`}
                         >
-                          {transaction.type === "withdrawal" ? "-" : "+"}
-                          {formatCurrency(transaction.amount)}
-                        </p>
+                          {transaction?.status}
+                        </Badge>
                       </div>
-                      <Badge
-                        className={`text-xs ${
-                          transaction.status === "completed"
-                            ? "bg-green-500/20 text-green-400 border-green-500/30"
-                            : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                        }`}
-                      >
-                        {transaction.status}
-                      </Badge>
                     </div>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             </CardContent>
           </Card>
@@ -778,9 +1310,9 @@ export default function UserDashboard() {
               <TrendingUp className="h-8 w-8 text-purple-400 mx-auto mb-2" />
               <h3 className="text-white font-semibold">Today's Profit</h3>
               <p className="text-2xl font-bold text-green-400">
-                +{formatCurrency(287.5)}
+                +
+                {formatCurrency(userInvestmentSummary?.data?.todaysProfit || 0)}
               </p>
-              <p className="text-xs text-gray-400">10% daily return</p>
             </CardContent>
           </Card>
 
@@ -788,7 +1320,9 @@ export default function UserDashboard() {
             <CardContent className="p-6 text-center">
               <Calendar className="h-8 w-8 text-blue-400 mx-auto mb-2" />
               <h3 className="text-white font-semibold">Days Invested</h3>
-              <p className="text-2xl font-bold text-blue-400">12</p>
+              <p className="text-2xl font-bold text-blue-400">
+                {userInvestmentSummary?.data?.investmentPeriod}
+              </p>
               <p className="text-xs text-gray-400">Since you started</p>
             </CardContent>
           </Card>
@@ -804,61 +1338,227 @@ export default function UserDashboard() {
         </div>
       </main>
 
-      {/* Deposit Modal */}
-      <Dialog open={depositModal} onOpenChange={closeDepositModal}>
+      {/* Create Plan Modal */}
+      <Dialog open={createPlanModal}>
         <DialogContent className="sm:max-w-md bg-gradient-to-br from-slate-900 to-purple-900/50 border-purple-500/30 backdrop-blur-sm">
           <DialogHeader>
             <DialogTitle className="text-white text-center text-xl flex items-center justify-center gap-2">
-              <Wallet className="h-5 w-5 text-purple-400" />
-              Deposit Funds
+              <Target className="h-5 w-5 text-purple-400" />
+              Create Investment Plan
             </DialogTitle>
           </DialogHeader>
 
-          {depositStep === "generating" && (
+          {createPlanStep === "form" && (
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <Label
+                    htmlFor="plan-select"
+                    className="text-white text-sm font-medium"
+                  >
+                    Select Investment Plan
+                  </Label>
+                  <Select value={selectedPlan} onValueChange={setSelectedPlan}>
+                    <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white">
+                      <SelectValue placeholder="Choose a plan" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-600">
+                      {investmentPlans.map((plan) => (
+                        <SelectItem
+                          key={plan.planId}
+                          value={plan.planId}
+                          className="text-white hover:bg-slate-700"
+                        >
+                          <div className="flex flex-col">
+                            <span className="font-medium">{plan.planName}</span>
+                            <span className="text-xs text-gray-400">
+                              {plan.dailyPercentage}% daily •{" "}
+                              {plan.withdrawalDay} days • Min: $
+                              {plan.minimumAmount}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor="crypto-select"
+                    className="text-white text-sm font-medium"
+                  >
+                    Select Cryptocurrency
+                  </Label>
+                  <Select
+                    value={selectedCrypto}
+                    onValueChange={handleCryptoSelect}
+                    disabled={loadingCrypto}
+                  >
+                    <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white">
+                      <SelectValue
+                        placeholder={
+                          loadingCrypto ? "Loading..." : "Choose cryptocurrency"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-600">
+                      {cryptoList.map((crypto) => (
+                        <SelectItem
+                          key={crypto.id}
+                          value={crypto.id}
+                          className="text-white hover:bg-slate-700"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">
+                              {crypto.name} ({crypto.symbol})
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              ${cryptoPrices[crypto.id]?.usd?.toLocaleString()}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {selectedCrypto && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-400">
+                      Price: $
+                      {cryptoPrices[selectedCrypto]?.usd?.toLocaleString()}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={refreshCryptoPrices}
+                      disabled={loadingCrypto}
+                      className="text-purple-400 hover:text-white"
+                    >
+                      <RefreshCw
+                        className={`h-4 w-4 ${
+                          loadingCrypto ? "animate-spin" : ""
+                        }`}
+                      />
+                    </Button>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label
+                      htmlFor="amount"
+                      className="text-white text-sm font-medium"
+                    >
+                      Amount (USD)
+                    </Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      placeholder="0.00"
+                      value={amount}
+                      onChange={(e) => handleAmountChange(e.target.value)}
+                      className="bg-slate-800/50 border-slate-600 text-white"
+                    />
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor="crypto-amount"
+                      className="text-white text-sm font-medium"
+                    >
+                      Crypto Amount
+                    </Label>
+                    <Input
+                      id="crypto-amount"
+                      type="number"
+                      placeholder="0.00000000"
+                      value={cryptoAmount}
+                      onChange={(e) => handleCryptoAmountChange(e.target.value)}
+                      className="bg-slate-800/50 border-slate-600 text-white"
+                    />
+                  </div>
+                </div>
+
+                {selectedPlan && (
+                  <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-4">
+                    <p className="text-blue-400 text-sm">
+                      ℹ️ Plan Details:{" "}
+                      {
+                        investmentPlans.find((p) => p.planId === selectedPlan)
+                          ?.dailyPercentage
+                      }
+                      % daily returns for{" "}
+                      {
+                        investmentPlans.find((p) => p.planId === selectedPlan)
+                          ?.withdrawalDay
+                      }{" "}
+                      days
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex space-x-3">
+                <Button
+                  disabled={isLoading}
+                  variant="outline"
+                  onClick={closeCreatePlanModal}
+                  className="flex-1 border-slate-600 text-white hover:bg-slate-800"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  disabled={isLoading}
+                  onClick={handleCreatePlanSubmit}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-white"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Create Plan"
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {createPlanStep === "generating" && (
             <div className="flex flex-col items-center space-y-6 py-8">
               <Loader2 className="h-12 w-12 text-purple-400 animate-spin" />
               <div className="text-center">
                 <h3 className="text-lg font-semibold text-white mb-2">
-                  Generating Wallet Address
+                  Generating Secure Wallet
                 </h3>
                 <p className="text-gray-300 text-sm">
-                  Please wait while we generate a secure wallet address for
-                  you...
+                  Please wait while we generate a secure wallet address for your
+                  investment...
                 </p>
               </div>
             </div>
           )}
 
-          {depositStep === "createPlan" && (
-            <div className="flex flex-col items-center space-y-6 py-8">
-              <Loader2 className="h-12 w-12 text-purple-400 animate-spin" />
-              <div className="text-center">
-                <h3 className="text-lg font-semibold text-white mb-2">
-                  Generating Wallet Address
-                </h3>
-                <p className="text-gray-300 text-sm">
-                  Please wait while we generate a secure wallet address for
-                  you...
-                </p>
-              </div>
-            </div>
-          )}
-
-          {depositStep === "address" && (
+          {createPlanStep === "address" && (
             <div className="space-y-6">
               <div className="text-center">
                 <h3 className="text-lg font-semibold text-white mb-2">
-                  Send Bitcoin to this address:
+                  Send {cryptoList.find((c) => c.id === selectedCrypto)?.symbol}{" "}
+                  to this address:
                 </h3>
                 <p className="text-gray-300 text-sm">
-                  Copy the address below and send your Bitcoin deposit
+                  Copy the address below and send your{" "}
+                  {cryptoList.find((c) => c.id === selectedCrypto)?.name}{" "}
+                  deposit
                 </p>
               </div>
 
               <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-600">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-gray-400">
-                    Bitcoin Address:
+                    {cryptoList.find((c) => c.id === selectedCrypto)?.name}{" "}
+                    Address:
                   </span>
                   <Button
                     variant="ghost"
@@ -882,8 +1582,273 @@ export default function UserDashboard() {
 
               <div className="bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-4">
                 <p className="text-yellow-400 text-sm">
-                  ⚠️ Only send Bitcoin to this address. Sending other
-                  cryptocurrencies may result in permanent loss.
+                  ⚠️ Only send{" "}
+                  {cryptoList.find((c) => c.id === selectedCrypto)?.symbol} to
+                  this address. Sending other cryptocurrencies may result in
+                  permanent loss.
+                </p>
+              </div>
+
+              <Button
+                onClick={handleCreatePlanComplete}
+                disabled={!addressCopied}
+                className={`w-full ${
+                  addressCopied
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-gray-600 cursor-not-allowed"
+                } text-white`}
+              >
+                I Have Deposited the Funds
+              </Button>
+
+              {!addressCopied && (
+                <p className="text-center text-sm text-gray-400">
+                  Please copy the address first to enable the deposit
+                  confirmation button
+                </p>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Deposit Modal */}
+      <Dialog open={depositModal} onOpenChange={closeDepositModal}>
+        <DialogContent className="sm:max-w-md bg-gradient-to-br from-slate-900 to-purple-900/50 border-purple-500/30 backdrop-blur-sm">
+          <DialogHeader>
+            <DialogTitle className="text-white text-center text-xl flex items-center justify-center gap-2">
+              <Wallet className="h-5 w-5 text-purple-400" />
+              Deposit Funds
+            </DialogTitle>
+          </DialogHeader>
+
+          {depositStep === "planSelection" && (
+            <div className="space-y-6">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Select Investment Plan
+                </h3>
+                <p className="text-gray-300 text-sm">
+                  Choose which plan you want to deposit into
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label
+                    htmlFor="deposit-plan-select"
+                    className="text-white text-sm font-medium"
+                  >
+                    Your Active Plans
+                  </Label>
+                  <Select
+                    value={selectedDepositPlan}
+                    onValueChange={setSelectedDepositPlan}
+                  >
+                    <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white">
+                      <SelectValue placeholder="Choose a plan to deposit into" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-600">
+                      {userPlans?.data?.map((plan) => (
+                        <SelectItem
+                          key={plan.investmentPlanId}
+                          value={plan.investmentPlanId}
+                          className="text-white hover:bg-slate-700"
+                        >
+                          <div className="flex flex-col">
+                            <span className="font-medium">
+                              {plan.investmentPlanName}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {plan.dailyPercentage}% daily • {plan.daysLeft}{" "}
+                              days left
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor="deposit-crypto-select"
+                    className="text-white text-sm font-medium"
+                  >
+                    Select Cryptocurrency
+                  </Label>
+                  <Select
+                    value={depositSelectedCrypto}
+                    onValueChange={handleDepositCryptoSelect}
+                    disabled={loadingCrypto}
+                  >
+                    <SelectTrigger className="bg-slate-800/50 border-slate-600 text-white">
+                      <SelectValue
+                        placeholder={
+                          loadingCrypto ? "Loading..." : "Choose cryptocurrency"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-600">
+                      {cryptoList.map((crypto) => (
+                        <SelectItem
+                          key={crypto.id}
+                          value={crypto.id}
+                          className="text-white hover:bg-slate-700"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">
+                              {crypto.name} ({crypto.symbol})
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              ${cryptoPrices[crypto.id]?.usd?.toLocaleString()}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label
+                      htmlFor="deposit-amount"
+                      className="text-white text-sm font-medium"
+                    >
+                      Amount (USD)
+                    </Label>
+                    <Input
+                      id="deposit-amount"
+                      type="number"
+                      placeholder="0.00"
+                      value={depositAmount}
+                      onChange={(e) =>
+                        handleDepositAmountChange(e.target.value)
+                      }
+                      className="bg-slate-800/50 border-slate-600 text-white"
+                    />
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor="deposit-crypto-amount"
+                      className="text-white text-sm font-medium"
+                    >
+                      Crypto Amount
+                    </Label>
+                    <Input
+                      id="deposit-crypto-amount"
+                      type="number"
+                      placeholder="0.00000000"
+                      value={depositCryptoAmount}
+                      onChange={(e) =>
+                        handleDepositCryptoAmountChange(e.target.value)
+                      }
+                      className="bg-slate-800/50 border-slate-600 text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-3">
+                <Button
+                  variant="outline"
+                  disabled={isLoading}
+                  onClick={closeDepositModal}
+                  className="flex-1 border-slate-600 text-white hover:bg-slate-800"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  disabled={isLoading}
+                  onClick={handleDepositSubmit}
+                  className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                >
+                  
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Continue"
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {depositStep === "generating" && (
+            <div className="flex flex-col items-center space-y-6 py-8">
+              <Loader2 className="h-12 w-12 text-purple-400 animate-spin" />
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Generating Wallet Address
+                </h3>
+                <p className="text-gray-300 text-sm">
+                  Please wait while we generate a secure wallet address for
+                  you...
+                </p>
+              </div>
+            </div>
+          )}
+
+          {depositStep === "address" && (
+            <div className="space-y-6">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Send{" "}
+                  {
+                    cryptoList.find((c) => c.id === depositSelectedCrypto)
+                      ?.symbol
+                  }{" "}
+                  to this address:
+                </h3>
+                <p className="text-gray-300 text-sm">
+                  Copy the address below and send your{" "}
+                  {cryptoList.find((c) => c.id === depositSelectedCrypto)?.name}{" "}
+                  deposit
+                </p>
+              </div>
+
+              <div className="bg-slate-800/50 p-4 rounded-lg border border-slate-600">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-400">
+                    {
+                      cryptoList.find((c) => c.id === depositSelectedCrypto)
+                        ?.name
+                    }{" "}
+                    Address:
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCopyAddress}
+                    className={`${
+                      addressCopied ? "text-green-400" : "text-purple-400"
+                    } hover:text-purple-300`}
+                  >
+                    {addressCopied ? (
+                      <CheckCircle className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                <p className="text-white font-mono text-sm break-all bg-slate-700/50 p-2 rounded">
+                  {walletAddress}
+                </p>
+              </div>
+
+              <div className="bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-4">
+                <p className="text-yellow-400 text-sm">
+                  ⚠️ Only send{" "}
+                  {
+                    cryptoList.find((c) => c.id === depositSelectedCrypto)
+                      ?.symbol
+                  }{" "}
+                  to this address. Sending other cryptocurrencies may result in
+                  permanent loss.
                 </p>
               </div>
 
@@ -896,7 +1861,7 @@ export default function UserDashboard() {
                     : "bg-gray-600 cursor-not-allowed"
                 } text-white`}
               >
-                I Have Deposited the Coin
+                I Have Deposited the Funds
               </Button>
 
               {!addressCopied && (
@@ -950,7 +1915,15 @@ export default function UserDashboard() {
                 onClick={handleConnectWallet}
                 className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
               >
-                Connect Wallet
+                 {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Connect Wallet"
+                  )}
+                
               </Button>
             </div>
           </div>

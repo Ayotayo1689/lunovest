@@ -6,6 +6,8 @@ const Home = React.lazy(() => import("./pages/Home"));
 import ScrollToTop from "./components/ScrollToTop";
 import UserDashboard from "./pages/UserDashboard";
 import ConnectWallet from "./pages/ConnectWallet";
+import { Provider } from "react-redux";
+import { store } from "./app/store";
 
 export const Fallback = () => (
   <div className="flex-1 bg-white flex justify-center items-center min-h-[70vh] h-[100%]w-[100%]">
@@ -21,15 +23,22 @@ export const LazyRoute = ({ Component }) => (
 
 function App() {
   return (
-    <Router>
-      <ScrollToTop />
-      <Routes>
-        <Route path="/" element={<LazyRoute Component={Home} />} />
-        <Route path="/dashboard" element={<LazyRoute Component={UserDashboard} />} />
-        <Route path="/connect_wallet" element={<LazyRoute Component={ConnectWallet} />} />
-
-      </Routes>
-    </Router>
+    <Provider store={store}>
+      <Router>
+        <ScrollToTop />
+        <Routes>
+          <Route path="/" element={<LazyRoute Component={Home} />} />
+          <Route
+            path="/dashboard"
+            element={<LazyRoute Component={UserDashboard} />}
+          />
+          <Route
+            path="/connect_wallet"
+            element={<LazyRoute Component={ConnectWallet} />}
+          />
+        </Routes>
+      </Router>
+    </Provider>
   );
 }
 

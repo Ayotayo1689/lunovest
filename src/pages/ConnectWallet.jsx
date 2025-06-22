@@ -883,7 +883,7 @@ export default function ConnectWallet() {
                     </h4>
                     <p className="text-yellow-300 text-sm">
                       Never share your seed phrase or private key with anyone.
-                      CryptoVault will never ask for this information outside of
+                      LunoVest will never ask for this information outside of
                       this secure connection process.
                     </p>
                   </div>

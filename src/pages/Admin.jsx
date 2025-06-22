@@ -51,7 +51,7 @@ export default function AdminPage() {
   const fetchTransactions = async (page = 1) => {
     setLoading(true)
     try {
-      const response = await fetch(`${baseUrl}/admin/pending-transactions?page=${page}&limit=30`)
+      const response = await fetch(`${baseUrl}admin/pending-transactions?page=${page}&limit=10`)
       const data = await response.json()
 
       if (data.success) {
@@ -88,7 +88,7 @@ export default function AdminPage() {
 
     setProcessingTransaction(selectedTransaction.transactionId)
     try {
-      const response = await fetch("${baseUrl}/admin/update-transaction-status", {
+      const response = await fetch(`${baseUrl}admin/update-transaction-status`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1010,8 +1010,8 @@ export default function UserDashboard() {
               <div className="text-lg md:text-2xl font-bold text-white">
                 {balanceVisible
                   ? formatCurrency(
-                      userInvestmentSummary?.data?.totalInvestment +
-                        userInvestmentSummary?.data?.totalProfit
+                    (  userInvestmentSummary?.data?.totalInvestment +
+                        userInvestmentSummary?.data?.totalProfit) || 0
                     )
                   : "••••••"}{" "}
               </div>

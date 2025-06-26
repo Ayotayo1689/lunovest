@@ -1198,7 +1198,7 @@ export default function UserDashboard() {
             <CardContent>
               <div className="flex items-center justify-between">
                 {isLoadingUserInvestmentSummary ? (
-                  <div className="">
+                  <div className="text-white">
                     <Loader2 className="h-4 w-4 animate-spin" />
                   </div>
                 ) : (
@@ -1239,7 +1239,7 @@ export default function UserDashboard() {
             </CardHeader>
             <CardContent>
               {isLoadingUserInvestmentSummary ? (
-                <div className="">
+                <div className="text-white">
                   <Loader2 className="h-4 w-4 animate-spin" />
                 </div>
               ) : (
@@ -1275,7 +1275,7 @@ export default function UserDashboard() {
             </CardHeader>
             <CardContent>
               {isLoadingUserInvestmentSummary ? (
-                <div className="">
+                <div className="text-white">
                   <Loader2 className="h-4 w-4 animate-spin" />
                 </div>
               ) : (
@@ -1299,7 +1299,7 @@ export default function UserDashboard() {
             </CardHeader>
             <CardContent>
               {isLoadingUserInvestmentSummary ? (
-                <div className="">
+                <div className="text-white">
                   <Loader2 className="h-4 w-4 animate-spin" />
                 </div>
               ) : (
@@ -1374,7 +1374,7 @@ export default function UserDashboard() {
               </CardHeader>
               <CardContent>
                 {isLoadingUserTransactionHistoryGraph ? (
-                  <div className="w-full flex flex-col justify-center items-center m-auto gap-2">
+                  <div className="w-full flex flex-col justify-center items-center m-auto gap-2 text-white">
                     <Loader2 className="h-4 w-4 animate-spin" />{" "}
                     <span>Loading...</span>
                   </div>
@@ -1475,7 +1475,7 @@ export default function UserDashboard() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {isLoadingUserPlans ? (
-                  <div className="w-full flex flex-col justify-center items-center m-auto gap-2">
+                  <div className="w-full flex flex-col justify-center items-center m-auto gap-2 text-white">
                     <Loader2 className="h-4 w-4 animate-spin" />{" "}
                     <span>Loading...</span>
                   </div>
@@ -1578,7 +1578,7 @@ export default function UserDashboard() {
               <div className="space-y-4">
 
               {isLoadingUserTransactionHistory ? (
-                  <div className="w-full flex flex-col justify-center items-center m-auto gap-2">
+                  <div className="w-full flex flex-col justify-center items-center m-auto gap-2 text-white">
                     <Loader2 className="h-4 w-4 animate-spin" />{" "}
                     <span>Loading...</span>
                   </div>

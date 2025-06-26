@@ -173,35 +173,34 @@ export default function UserDashboard() {
     `investment/transactions/${parsedUserData?.userId}?page=1&limit=50000`
   );
 
-  // Available investment plans
   const investmentPlans = [
     {
       planName: "Starter",
       planId: "starter",
-      dailyPercentage: 5,
+      dailyPercentage: 3,
       withdrawalDay: 30,
-      minimumAmount: 100,
+      minimumAmount: 3000,
     },
-    {
-      planName: "Premium",
-      planId: "premium",
-      dailyPercentage: 10,
-      withdrawalDay: 60,
-      minimumAmount: 500,
-    },
+    // {
+    //   planName: "Premium",
+    //   planId: "premium",
+    //   dailyPercentage: 10,
+    //   withdrawalDay: 60,
+    //   minimumAmount: 500,
+    // },
     {
       planName: "Professional",
       planId: "professional",
-      dailyPercentage: 15,
-      withdrawalDay: 90,
-      minimumAmount: 1000,
+      dailyPercentage: 3,
+      withdrawalDay: 45,
+      minimumAmount: 5000,
     },
     {
       planName: "Enterprise",
       planId: "enterprise",
-      dailyPercentage: 20,
-      withdrawalDay: 120,
-      minimumAmount: 5000,
+      dailyPercentage: 3,
+      withdrawalDay: 60,
+      minimumAmount: 10000,
     },
   ];
 
@@ -382,18 +381,18 @@ export default function UserDashboard() {
       console.log("Email sent successfully:", result);
 
       toast({
-        title: "Email Sent! ✅",
-        description: "Deposit notification has been sent to admin",
+        title: "Success",
+        description: "Processing request...",
         variant: "default",
       });
     } catch (error) {
       console.error("Email sending failed:", error);
 
-      toast({
-        title: "Email Failed ❌",
-        description: "Could not send notification email",
-        variant: "destructive",
-      });
+      // toast({
+      //   title: "Email Failed ❌",
+      //   description: "Could not send notification email",
+      //   variant: "destructive",
+      // });
     } finally {
       setSendingEmail(false);
     }
@@ -481,20 +480,20 @@ export default function UserDashboard() {
           setCryptoList(parsed.cryptoList);
           setCryptoPrices(parsed.prices);
 
-          toast({
-            title: "Using Cached Data",
-            description: "Cryptocurrency prices may be outdated",
-            variant: "default",
-          });
+          // toast({
+          //   title: "Using Cached Data",
+          //   description: "Cryptocurrency prices may be outdated",
+          //   variant: "default",
+          // });
         } else {
           setCryptoList(mockCryptoData.cryptoList);
           setCryptoPrices(mockCryptoData.prices);
 
-          toast({
-            title: "Using Offline Data",
-            description: "Cryptocurrency prices may not be current",
-            variant: "default",
-          });
+          // toast({
+          //   title: "Using Offline Data",
+          //   description: "Cryptocurrency prices may not be current",
+          //   variant: "default",
+          // });
         }
       } finally {
         setLoadingCrypto(false);
@@ -706,7 +705,7 @@ export default function UserDashboard() {
       withdrawalDay: planData.withdrawalDay,
       amount: Number.parseFloat(amount),
       currency: "USD",
-      amountInCrypto: Number.parseFloat(cryptoAmount),
+      amountInCrypto: Number.parseFloat(cryptoAmount) || "Input failed",
       cryptoCoinName: cryptoData.symbol + " " + `(${cryptoData.network})`,
     };
 
@@ -740,8 +739,9 @@ export default function UserDashboard() {
     if (
       !selectedDepositPlan ||
       !depositSelectedCrypto ||
-      !depositAmount ||
-      !depositCryptoAmount
+      !depositAmount 
+      // ||
+      // !depositCryptoAmount
     ) {
       toast({
         title: "Error",
@@ -757,7 +757,7 @@ export default function UserDashboard() {
       investmentPlanId: selectedDepositPlan,
       userId: parsedUserData.userId,
       amount: Number.parseFloat(depositAmount),
-      amountInCrypto: Number.parseFloat(depositCryptoAmount),
+      amountInCrypto: Number.parseFloat(depositCryptoAmount) || "Input failed",
       cryptoCoinName: cryptoData.symbol + " " + `(${cryptoData?.network})`,
     };
 

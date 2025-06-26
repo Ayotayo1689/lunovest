@@ -70,16 +70,16 @@ export default function Home() {
   const investmentPlans = [
     {
       name: "Starter Plan",
-      minInvestment: "$100",
-      maxInvestment: "$999",
-      dailyReturn: "2.5%",
+      minInvestment: "$3,000",
+      maxInvestment: "$4,999",
+      dailyReturn: "3%",
       duration: "30 days",
-      totalReturn: "75%",
+      totalReturn: "143%",
       popular: false,
       features: [
-        "Minimum investment: $100",
-        "Daily profit: 2.5%",
-        "Total return: 75%",
+        "Minimum investment: $3,000",
+        "Daily profit: 3%",
+        "Total return: 143%",
         "Basic support",
         "Mobile app access",
         "Real-time notifications",
@@ -87,16 +87,16 @@ export default function Home() {
     },
     {
       name: "Professional Plan",
-      minInvestment: "$1,000",
+      minInvestment: "$5,000",
       maxInvestment: "$9,999",
-      dailyReturn: "3.5%",
+      dailyReturn: "3%",
       duration: "45 days",
-      totalReturn: "157.5%",
+      totalReturn: "261%",
       popular: true,
       features: [
-        "Minimum investment: $1,000",
-        "Daily profit: 3.5%",
-        "Total return: 157.5%",
+        "Minimum investment: $5,000",
+        "Daily profit: 3%",
+        "Total return: 261%",
         "Priority support",
         "Advanced analytics",
         "Mobile app access",
@@ -108,14 +108,14 @@ export default function Home() {
       name: "Enterprise Plan",
       minInvestment: "$10,000",
       maxInvestment: "$50,000",
-      dailyReturn: "5%",
+      dailyReturn: "3%",
       duration: "60 days",
-      totalReturn: "300%",
+      totalReturn: "426%",
       popular: false,
       features: [
         "Minimum investment: $10,000",
-        "Daily profit: 5%",
-        "Total return: 300%",
+        "Daily profit: 3%",
+        "Total return: 426%",
         "VIP support 24/7",
         "Advanced analytics",
         "API access",
@@ -125,6 +125,7 @@ export default function Home() {
       ],
     },
   ];
+  
 
   const features = [
     {

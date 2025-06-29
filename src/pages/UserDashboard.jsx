@@ -76,6 +76,7 @@ import { useNavigate } from "react-router-dom";
 import formatTimeAgo from "../utils/formatTimeAgo";
 import { useApiGet, useApiPost } from "@/hooks/useApi";
 import { formatDate, formatTime } from "@/utils/formatDate";
+import CustomProgressBar from "@/components/CustomProgressBar";
 
 export default function UserDashboard() {
   const { post, isLoading } = useApiPost();
@@ -739,7 +740,7 @@ export default function UserDashboard() {
     if (
       !selectedDepositPlan ||
       !depositSelectedCrypto ||
-      !depositAmount 
+      !depositAmount
       // ||
       // !depositCryptoAmount
     ) {
@@ -857,6 +858,18 @@ export default function UserDashboard() {
     const msPerDay = 1000 * 60 * 60 * 24;
     const totalDays = Math.round((futureDate - startDate) / msPerDay);
 
+    return totalDays;
+  }
+
+  function getTotalInvestmentDays(createdAt, daysLeft) {
+    const createdDate = new Date(createdAt);
+    const today = new Date();
+
+    // Calculate how many full days have passed since creation
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const daysPassed = Math.floor((today - createdDate) / msPerDay);
+
+    const totalDays = daysPassed + daysLeft;
     return totalDays;
   }
 
@@ -1506,25 +1519,53 @@ export default function UserDashboard() {
                             <div className="flex justify-between text-xs">
                               <span className="text-gray-400">Progress</span>
                               <span className="text-gray-300">
-                                {getTotalDays(plan?.createdAt, plan.daysLeft)}{" "}
+                                {getTotalInvestmentDays(
+                                  plan?.createdAt,
+                                  plan.daysLeft
+                                )}{" "}
                                 days
                               </span>
                             </div>
-                            <Progress
-                              value={
-                                ((getTotalDays(
+
+                            <CustomProgressBar value={
+                              ((getTotalInvestmentDays(
+                                plan?.createdAt,
+                                plan?.daysLeft
+                              ) -
+                                plan?.daysLeft) /
+                                getTotalInvestmentDays(
                                   plan?.createdAt,
                                   plan?.daysLeft
-                                ) -
-                                  plan?.daysLeft) /
-                                  getTotalDays(
-                                    plan?.createdAt,
-                                    plan.daysLeft
-                                  )) *
+                                )) *
+                              100
+                            } fillColor="#2c945b" bgColor="#907da050"/>
+                            {/* <Progress
+                              value={
                                 100
+                                // ((getTotalInvestmentDays(
+                                //   plan?.createdAt,
+                                //   plan?.daysLeft
+                                // ) -
+                                //   plan?.daysLeft) /
+                                //   getTotalInvestmentDays(
+                                //     plan?.createdAt,
+                                //     plan?.daysLeft
+                                //   )) *
+                                // 100
+
+                                // ((getTotalInvestmentDays(
+                                //   plan?.createdAt,
+                                //   plan?.daysLeft
+                                // ) -
+                                //   plan?.daysLeft) /
+                                //   getTotalInvestmentDays(
+                                //     plan?.createdAt,
+                                //     plan.daysLeft
+                                //   )) *
+                                // 100
                               }
                               className="h-2 bg-gray-700"
-                            />
+                            /> */}
                             <div className="flex justify-between items-center">
                               <span className="text-xs text-gray-400">
                                 {plan?.daysLeft} days left
@@ -1576,78 +1617,80 @@ export default function UserDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-
-              {isLoadingUserTransactionHistory ? (
+                {isLoadingUserTransactionHistory ? (
                   <div className="w-full flex flex-col justify-center items-center m-auto gap-2 text-white">
                     <Loader2 className="h-4 w-4 animate-spin" />{" "}
                     <span>Loading...</span>
                   </div>
-                ) : <> {userTransactionHistory?.data?.transactions?.length > 0 ? (
-                  userTransactionHistory.data.transactions
-                    .slice(0, 5)
-                    .map((transaction) => (
-                      <div
-                        key={transaction.transactionId}
-                        className="flex items-center justify-between p-3 md:p-4 bg-gradient-to-r from-gray-800/20 to-gray-700/10 border border-gray-600/20 rounded-lg hover:border-purple-500/30 transition-colors"
-                      >
-                        <div className="flex items-center space-x-3 md:space-x-4 flex-1 min-w-0">
-                          <div className="bg-gray-700/50 p-2 rounded-lg flex-shrink-0">
-                            {getTransactionIcon(transaction?.transactionType)}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-white font-medium text-sm truncate">
-                              {transaction?.description}
-                            </p>
-                            <p className="text-gray-400 text-xs">
-                              {formatDate(transaction?.dateTime)} at{" "}
-                              {formatTime(transaction?.dateTime)}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-2 md:space-x-4 flex-shrink-0">
-                          <div className="text-right">
-                            <p
-                              className={`font-semibold text-sm ${
-                                transaction?.transactionType === "deposit"
-                                  ? "text-green-400"
-                                  : transaction?.transactionType ===
-                                    "withdrawal"
-                                  ? "text-red-400"
-                                  : "text-blue-400"
-                              }`}
-                            >
-                              {transaction?.transactionType === "withdrawal"
-                                ? "-"
-                                : "+"}
-                              {formatCurrency(transaction?.amount || 0)}
-                            </p>
-                          </div>
-                          <Badge
-                            className={`text-xs ${
-                              transaction?.status === "success"
-                                ? "bg-green-500/20 text-green-400 border-green-500/30"
-                                : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                            }`}
-                          >
-                            {transaction?.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))
                 ) : (
-                  <div className="text-center py-8">
-                    <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-400">No transactions yet</p>
-                    <p className="text-gray-500 text-sm">
-                      Your transaction history will appear here
-                    </p>
-                  </div>
-                )}</>}
+                  <>
+                    {" "}
+                    {userTransactionHistory?.data?.transactions?.length > 0 ? (
+                      userTransactionHistory.data.transactions
+                        .slice(0, 5)
+                        .map((transaction) => (
+                          <div
+                            key={transaction.transactionId}
+                            className="flex items-center justify-between p-3 md:p-4 bg-gradient-to-r from-gray-800/20 to-gray-700/10 border border-gray-600/20 rounded-lg hover:border-purple-500/30 transition-colors"
+                          >
+                            <div className="flex items-center space-x-3 md:space-x-4 flex-1 min-w-0">
+                              <div className="bg-gray-700/50 p-2 rounded-lg flex-shrink-0">
+                                {getTransactionIcon(
+                                  transaction?.transactionType
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-white font-medium text-sm truncate">
+                                  {transaction?.description}
+                                </p>
+                                <p className="text-gray-400 text-xs">
+                                  {formatDate(transaction?.dateTime)} at{" "}
+                                  {formatTime(transaction?.dateTime)}
+                                </p>
+                              </div>
+                            </div>
 
-
-
-               
+                            <div className="flex items-center space-x-2 md:space-x-4 flex-shrink-0">
+                              <div className="text-right">
+                                <p
+                                  className={`font-semibold text-sm ${
+                                    transaction?.transactionType === "deposit"
+                                      ? "text-green-400"
+                                      : transaction?.transactionType ===
+                                        "withdrawal"
+                                      ? "text-red-400"
+                                      : "text-blue-400"
+                                  }`}
+                                >
+                                  {transaction?.transactionType === "withdrawal"
+                                    ? "-"
+                                    : "+"}
+                                  {formatCurrency(transaction?.amount || 0)}
+                                </p>
+                              </div>
+                              <Badge
+                                className={`text-xs ${
+                                  transaction?.status === "success"
+                                    ? "bg-green-500/20 text-green-400 border-green-500/30"
+                                    : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                                }`}
+                              >
+                                {transaction?.status}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-400">No transactions yet</p>
+                        <p className="text-gray-500 text-sm">
+                          Your transaction history will appear here
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>

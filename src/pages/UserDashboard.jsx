@@ -664,10 +664,19 @@ export default function UserDashboard() {
   }, [depositModal, depositStep]);
 
   const handleDepositClick = () => {
-    setDepositModal(true);
-    setDepositStep("planSelection");
-    setAddressCopied(false);
+    if (userPlans?.data.length > 0) {
+      setDepositModal(true);
+      setDepositStep("planSelection");
+      setAddressCopied(false);
+    } else {
+      handleCreatePlanClick();
+    }
   };
+
+
+
+
+  
 
   const handleCreatePlanClick = () => {
     setCreatePlanModal(true);
@@ -767,10 +776,10 @@ export default function UserDashboard() {
 
       if (response.success) {
         setDepositStep("generating");
-        toast({
-          title: "Success",
-          description: "Deposit initiated successfully!",
-        });
+        // toast({
+        //   title: "Success",
+        //   description: "Deposit initiated successfully!",
+        // });
       } else {
         toast({
           title: "Something went wrong.",
@@ -945,6 +954,7 @@ export default function UserDashboard() {
     setAddressCopied(false);
     refetchPlans();
     refetchInvestmentSummary();
+    refetchTransactionHistory()
 
     toast({
       title: "Plan Created!",
@@ -1015,7 +1025,7 @@ export default function UserDashboard() {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
+            {/* <nav className="hidden md:flex items-center space-x-8">
               <a
                 href="#"
                 className="text-white hover:text-purple-400 transition-colors font-medium"
@@ -1040,7 +1050,7 @@ export default function UserDashboard() {
               >
                 Analytics
               </a>
-            </nav>
+            </nav> */}
 
             <div className="flex items-center space-x-4">
               <Button
@@ -1072,14 +1082,14 @@ export default function UserDashboard() {
                     align="end"
                     className="bg-slate-800 border-slate-700 w-48"
                   >
-                    <DropdownMenuItem className="text-white hover:bg-slate-700">
+                    {/* <DropdownMenuItem className="text-white hover:bg-slate-700">
                       <Settings className="h-4 w-4 mr-2" />
                       Settings
                     </DropdownMenuItem>
                     <DropdownMenuItem className="text-white hover:bg-slate-700">
                       <User className="h-4 w-4 mr-2" />
                       Profile
-                    </DropdownMenuItem>
+                    </DropdownMenuItem> */}
                     <DropdownMenuItem
                       onClick={() => {
                         localStorage.clear();
@@ -1112,7 +1122,7 @@ export default function UserDashboard() {
           {mobileMenuOpen && (
             <div className="md:hidden pb-4 border-t border-purple-500/20 mt-4">
               <div className="flex flex-col space-y-4 pt-4">
-                <a
+                {/* <a
                   href="#"
                   className="text-white hover:text-purple-400 transition-colors font-medium"
                 >
@@ -1135,7 +1145,7 @@ export default function UserDashboard() {
                   className="text-gray-300 hover:text-white transition-colors"
                 >
                   Analytics
-                </a>
+                </a> */}
                 <div className="border-t border-purple-500/20 pt-4">
                   <div className="flex items-center space-x-2 mb-4">
                     <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-full flex items-center justify-center">
@@ -1146,7 +1156,7 @@ export default function UserDashboard() {
                     </span>
                   </div>
                   <div className="flex flex-col space-y-2">
-                    <Button
+                    {/* <Button
                       variant="ghost"
                       className="text-gray-300 hover:text-white hover:bg-white/10 justify-start"
                     >
@@ -1159,7 +1169,7 @@ export default function UserDashboard() {
                     >
                       <User className="h-4 w-4 mr-2" />
                       Profile
-                    </Button>
+                    </Button> */}
                     <Button
                       onClick={() => {
                         localStorage.clear();
@@ -1527,18 +1537,22 @@ export default function UserDashboard() {
                               </span>
                             </div>
 
-                            <CustomProgressBar value={
-                              ((getTotalInvestmentDays(
-                                plan?.createdAt,
-                                plan?.daysLeft
-                              ) -
-                                plan?.daysLeft) /
-                                getTotalInvestmentDays(
+                            <CustomProgressBar
+                              value={
+                                ((getTotalInvestmentDays(
                                   plan?.createdAt,
                                   plan?.daysLeft
-                                )) *
-                              100
-                            } fillColor="#2c945b" bgColor="#907da050"/>
+                                ) -
+                                  plan?.daysLeft) /
+                                  getTotalInvestmentDays(
+                                    plan?.createdAt,
+                                    plan?.daysLeft
+                                  )) *
+                                100
+                              }
+                              fillColor="#2c945b"
+                              bgColor="#907da050"
+                            />
                             {/* <Progress
                               value={
                                 100
@@ -1672,7 +1686,7 @@ export default function UserDashboard() {
                                 className={`text-xs ${
                                   transaction?.status === "success"
                                     ? "bg-green-500/20 text-green-400 border-green-500/30"
-                                    : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                                    :  transaction?.status === "failed" ? " bg-red-500/20 text-red-400 border-red-500/30 " : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
                                 }`}
                               >
                                 {transaction?.status}

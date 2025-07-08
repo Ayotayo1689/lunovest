@@ -181,7 +181,7 @@ export default function Home() {
       role: "Business Owner",
       image: "https://plus.unsplash.com/premium_photo-1690296204289-14e517830d8e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Njl8fGxhZHl8ZW58MHx8MHx8fDA%3D",
       content:
-        "Started with the Enterprise plan and couldn't be happier. The AI trading algorithms are impressive, and the customer support is outstanding. Highly recommended!",
+        "Started with the Enterprise plan and couldn't be happier. Their trading experts are impressive, and the customer support is outstanding. Highly recommended!",
       rating: 5,
       profit: "$125,000",
     },
@@ -223,7 +223,7 @@ export default function Home() {
     {
       question: "How does LunoVest generate such high returns?",
       answer:
-        "Our advanced AI algorithms analyze thousands of market indicators, news sentiment, and trading patterns across multiple cryptocurrency exchanges. This allows us to execute profitable trades 24/7 while minimizing risk through diversification and automated stop-loss mechanisms.",
+        "Our advanced trading experts analyze thousands of market indicators, news sentiment, and trading patterns across multiple cryptocurrency exchanges. This allows us to execute profitable trades 24/7 while minimizing risk through diversification and automated stop-loss mechanisms.",
     },
     {
       question: "Is my investment safe and secure?",
@@ -238,7 +238,7 @@ export default function Home() {
     {
       question: "What is the minimum investment amount?",
       answer:
-        "The minimum investment starts at just $100 for our Starter Plan. This makes our platform accessible to investors of all levels, from beginners to institutional investors.",
+        "The minimum investment starts at just $3000 for our Starter Plan. This makes our platform accessible to investors of all levels, from beginners to institutional investors.",
     },
     {
       question: "Can I reinvest my profits automatically?",
@@ -472,9 +472,9 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
               <div className="space-y-6">
-                <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-sm px-4 py-2">
+                {/* <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-sm px-4 py-2">
                   🚀 #1 AI-Powered Crypto Investment Platform
-                </Badge>
+                </Badge> */}
                 <h1 className="text-4xl lg:text-7xl font-bold leading-tight">
                   <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                     Earn Up To
@@ -491,7 +491,7 @@ export default function Home() {
                 <p className="text-xl text-gray-300 leading-relaxed max-w-2xl">
                   Join over 45,000 investors who trust our advanced AI
                   algorithms to generate consistent daily profits from
-                  cryptocurrency trading. Start with as little as $100 and watch
+                  cryptocurrency trading. Start with as little as $3000 and watch
                   your investment grow automatically.
                 </p>
               </div>
@@ -539,7 +539,7 @@ export default function Home() {
                     Live Trading Dashboard
                   </CardTitle>
                   <CardDescription className="text-gray-300">
-                    Real-time performance of our AI trading algorithms
+                    Real-time performance of our trading experts.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -619,7 +619,7 @@ export default function Home() {
             </h2>
             <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
               LunoVest is a revolutionary cryptocurrency investment platform
-              that combines cutting-edge artificial intelligence with
+              that combines expertise with
               institutional-grade security to deliver consistent, profitable
               returns for investors worldwide. Our advanced algorithms analyze
               market data 24/7, executing thousands of micro-trades to

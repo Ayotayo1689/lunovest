@@ -53,7 +53,12 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useApiPost } from "@/hooks/useApi";
 import AuthModal from "@/components/AuthModal";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Home() {
   const { post } = useApiPost();
@@ -125,7 +130,6 @@ export default function Home() {
       ],
     },
   ];
-  
 
   const features = [
     {
@@ -170,7 +174,8 @@ export default function Home() {
     {
       name: "Sarah Johnson",
       role: "Professional Trader",
-      image: "https://plus.unsplash.com/premium_photo-1689551671541-31a345ce6ae0?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      image:
+        "https://plus.unsplash.com/premium_photo-1689551671541-31a345ce6ae0?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
       content:
         "LunoVest has transformed my investment strategy. I've been earning consistent 3.5% daily returns for 6 months now. The platform is incredibly reliable and secure.",
       rating: 5,
@@ -179,7 +184,8 @@ export default function Home() {
     {
       name: "Michael Chen",
       role: "Business Owner",
-      image: "https://plus.unsplash.com/premium_photo-1690296204289-14e517830d8e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Njl8fGxhZHl8ZW58MHx8MHx8fDA%3D",
+      image:
+        "https://plus.unsplash.com/premium_photo-1690296204289-14e517830d8e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Njl8fGxhZHl8ZW58MHx8MHx8fDA%3D",
       content:
         "Started with the Enterprise plan and couldn't be happier. Their trading experts are impressive, and the customer support is outstanding. Highly recommended!",
       rating: 5,
@@ -188,7 +194,8 @@ export default function Home() {
     {
       name: "Emma Rodriguez",
       role: "Financial Advisor",
-      image: "https://media.istockphoto.com/id/2162937006/photo/studio-portrait-of-decision-making-businesswoman-in-businesswear.webp?a=1&b=1&s=612x612&w=0&k=20&c=Pu-hZ3TEdx-khwkiX_ql6P0Z8JmPX7W0ghpEorhqP1E=",
+      image:
+        "https://media.istockphoto.com/id/2162937006/photo/studio-portrait-of-decision-making-businesswoman-in-businesswear.webp?a=1&b=1&s=612x612&w=0&k=20&c=Pu-hZ3TEdx-khwkiX_ql6P0Z8JmPX7W0ghpEorhqP1E=",
       content:
         "As a financial advisor, I'm always skeptical of investment platforms. LunoVest proved me wrong with their transparency and consistent performance. My clients love it!",
       rating: 5,
@@ -297,46 +304,47 @@ export default function Home() {
 
               <div className="">
                 {userData1 !== null ? (
-                    <div className="hidden md:block">
-                                 <DropdownMenu>
-                                   <DropdownMenuTrigger asChild>
-                                     <Button
-                                       variant="ghost"
-                                       className="flex items-center space-x-2 text-white hover:bg-white/10"
-                                     >
-                                       <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-full flex items-center justify-center">
-                                         <User className="h-4 w-4 text-white" />
-                                       </div>
-                                       <span>
-                                         {parsedUserData?.firstName} {parsedUserData?.lastName}
-                                       </span>
-                                     </Button>
-                                   </DropdownMenuTrigger>
-                                   <DropdownMenuContent
-                                     align="end"
-                                     className="bg-slate-800 border-slate-700 w-48"
-                                   >
-                                     <DropdownMenuItem className="text-white hover:bg-slate-700">
-                                       <Settings className="h-4 w-4 mr-2" />
-                                       Settings
-                                     </DropdownMenuItem>
-                                     <DropdownMenuItem className="text-white hover:bg-slate-700">
-                                       <User className="h-4 w-4 mr-2" />
-                                       Profile
-                                     </DropdownMenuItem>
-                                     <DropdownMenuItem
-                                       onClick={() => {
-                                         localStorage.clear();
-                                        window.location.reload();
-                                       }}
-                                       className="text-white hover:bg-slate-700"
-                                     >
-                                       <LogOut className="h-4 w-4 mr-2" />
-                                       Logout
-                                     </DropdownMenuItem>
-                                   </DropdownMenuContent>
-                                 </DropdownMenu>
-                               </div>
+                  <div className="hidden md:block">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="flex items-center space-x-2 text-white hover:bg-white/10"
+                        >
+                          <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-full flex items-center justify-center">
+                            <User className="h-4 w-4 text-white" />
+                          </div>
+                          <span>
+                            {parsedUserData?.firstName}{" "}
+                            {parsedUserData?.lastName}
+                          </span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        className="bg-slate-800 border-slate-700 w-48"
+                      >
+                        <DropdownMenuItem className="text-white hover:bg-slate-700">
+                          <Settings className="h-4 w-4 mr-2" />
+                          Settings
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-white hover:bg-slate-700">
+                          <User className="h-4 w-4 mr-2" />
+                          Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            localStorage.clear();
+                            window.location.reload();
+                          }}
+                          className="text-white hover:bg-slate-700"
+                        >
+                          <LogOut className="h-4 w-4 mr-2" />
+                          Logout
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 ) : (
                   <>
                     {" "}
@@ -405,60 +413,61 @@ export default function Home() {
                   FAQ
                 </a>
 
-                {
-                  userData1 !== null ? <div className="border-t border-purple-500/20 pt-4">
-                                    <div className="flex items-center space-x-2 mb-4">
-                                      <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-full flex items-center justify-center">
-                                        <User className="h-4 w-4 text-white" />
-                                      </div>
-                                      <span className="text-white">
-                                        {parsedUserData?.firstName} {parsedUserData?.lastName}
-                                      </span>
-                                    </div>
-                                    <div className="flex flex-col space-y-2">
-                                      <Button
-                                        variant="ghost"
-                                        className="text-gray-300 hover:text-white hover:bg-white/10 justify-start"
-                                      >
-                                        <Settings className="h-4 w-4 mr-2" />
-                                        Settings
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        className="text-gray-300 hover:text-white hover:bg-white/10 justify-start"
-                                      >
-                                        <User className="h-4 w-4 mr-2" />
-                                        Profile
-                                      </Button>
-                                      <Button
-                                        onClick={() => {
-                                          localStorage.clear();
-                                        window.location.reload();
-                                        }}
-                                        variant="ghost"
-                                        className="text-gray-300 hover:text-white hover:bg-white/10 justify-start"
-                                      >
-                                        <LogOut className="h-4 w-4 mr-2" />
-                                        Logout
-                                      </Button>
-                                    </div>
-                                  </div> :  <div className="flex flex-col space-y-2 pt-4">
-                  <Button
-                    variant="ghost"
-                    className="text-purple-400 hover:text-white hover:bg-purple-500/20 justify-start"
-                    onClick={() => setAuthModal("login")}
-                  >
-                    Login
-                  </Button>
-                  <Button
-                    className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-white justify-start"
-                    onClick={() => setAuthModal("signup")}
-                  >
-                    Get Started
-                  </Button>
-                </div>
-                }
-               
+                {userData1 !== null ? (
+                  <div className="border-t border-purple-500/20 pt-4">
+                    <div className="flex items-center space-x-2 mb-4">
+                      <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-cyan-400 rounded-full flex items-center justify-center">
+                        <User className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="text-white">
+                        {parsedUserData?.firstName} {parsedUserData?.lastName}
+                      </span>
+                    </div>
+                    <div className="flex flex-col space-y-2">
+                      <Button
+                        variant="ghost"
+                        className="text-gray-300 hover:text-white hover:bg-white/10 justify-start"
+                      >
+                        <Settings className="h-4 w-4 mr-2" />
+                        Settings
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="text-gray-300 hover:text-white hover:bg-white/10 justify-start"
+                      >
+                        <User className="h-4 w-4 mr-2" />
+                        Profile
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          localStorage.clear();
+                          window.location.reload();
+                        }}
+                        variant="ghost"
+                        className="text-gray-300 hover:text-white hover:bg-white/10 justify-start"
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Logout
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-2 pt-4">
+                    <Button
+                      variant="ghost"
+                      className="text-purple-400 hover:text-white hover:bg-purple-500/20 justify-start"
+                      onClick={() => setAuthModal("login")}
+                    >
+                      Login
+                    </Button>
+                    <Button
+                      className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-white justify-start"
+                      onClick={() => setAuthModal("signup")}
+                    >
+                      Get Started
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -491,8 +500,8 @@ export default function Home() {
                 <p className="text-xl text-gray-300 leading-relaxed max-w-2xl">
                   Join over 45,000 investors who trust our advanced AI
                   algorithms to generate consistent daily profits from
-                  cryptocurrency trading. Start with as little as $3000 and watch
-                  your investment grow automatically.
+                  cryptocurrency trading. Start with as little as $3000 and
+                  watch your investment grow automatically.
                 </p>
               </div>
 
@@ -619,11 +628,10 @@ export default function Home() {
             </h2>
             <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
               LunoVest is a revolutionary cryptocurrency investment platform
-              that combines expertise with
-              institutional-grade security to deliver consistent, profitable
-              returns for investors worldwide. Our advanced algorithms analyze
-              market data 24/7, executing thousands of micro-trades to
-              capitalize on market inefficiencies.
+              that combines expertise with institutional-grade security to
+              deliver consistent, profitable returns for investors worldwide.
+              Our advanced algorithms analyze market data 24/7, executing
+              thousands of micro-trades to capitalize on market inefficiencies.
             </p>
           </div>
 
@@ -967,8 +975,8 @@ export default function Home() {
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
               Join over 45,000 investors who are already earning consistent
-              daily returns with our AI-powered platform. Start your journey to
-              financial freedom today.
+              daily returns with our platform. Start your journey to financial
+              freedom today.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -998,15 +1006,12 @@ export default function Home() {
           <div className="grid md:grid-cols-5 gap-8">
             <div className="md:col-span-2 space-y-4">
               <div className="flex items-center space-x-2">
-                <Bitcoin className="h-8 w-8 text-purple-400" />
-                <span className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                  LunoVest
-                </span>
+                <img src={BigLogo} alt="" className="w-[100px]" />
               </div>
               <p className="text-gray-400 text-sm leading-relaxed max-w-md">
-                The most trusted AI-powered cryptocurrency investment platform.
-                Join thousands of investors earning consistent daily returns
-                through our advanced trading algorithms.
+                The most trusted cryptocurrency investment platform. Join
+                thousands of investors earning consistent daily returns through
+                our advanced trading algorithms.
               </p>
               <div className="flex space-x-4">
                 <Button

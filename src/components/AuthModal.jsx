@@ -1,5 +1,5 @@
 import { useApiPost } from "@/hooks/useApi";
-import { AlertCircle, CheckCircle, Loader2, Wallet } from "lucide-react";
+import { AlertCircle, CheckCircle, Eye, EyeOff, Loader2, Wallet } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -11,6 +11,11 @@ const AuthModal = ({ type, onClose }) => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const navigate = useNavigate();
+
+  // Password visibility states
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Form states
   const [loginForm, setLoginForm] = useState({
@@ -37,8 +42,6 @@ const AuthModal = ({ type, onClose }) => {
   if (!type) return null;
 
   const handleLoginInputChange = (e) => {
-    console.log(e.target.value);
-
     const { name, value } = e.target;
     setLoginForm((prev) => ({
       ...prev,
@@ -60,7 +63,6 @@ const AuthModal = ({ type, onClose }) => {
     setError("");
     setSuccess("");
 
-    // Basic validation
     const {
       firstName,
       lastName,
@@ -95,7 +97,6 @@ const AuthModal = ({ type, onClose }) => {
       return;
     }
 
-    // Format phone number
     let formattedPhone = phoneNumber.replace(/\D/g, "");
     if (!formattedPhone.startsWith("1") && formattedPhone.length === 10) {
       formattedPhone = "+1" + formattedPhone;
@@ -112,14 +113,12 @@ const AuthModal = ({ type, onClose }) => {
         password,
         confirmPassword,
       });
-    
 
       if (response.success === false) {
         setError(response.mesage);
       } else if (response.success === true) {
         setSuccess("Account created successfully! Please login to continue.");
 
-        // Clear signup form
         setSignupForm({
           firstName: "",
           lastName: "",
@@ -129,7 +128,6 @@ const AuthModal = ({ type, onClose }) => {
           confirmPassword: "",
         });
 
-        // Switch to login tab after a short delay
         setTimeout(() => {
           setActiveTab("login");
           setError("");
@@ -150,7 +148,6 @@ const AuthModal = ({ type, onClose }) => {
     setError("");
     setSuccess("");
 
-    // Basic validation
     if (!loginForm.email || !loginForm.password) {
       setError("Please fill in all fields");
       setLoading(false);
@@ -166,7 +163,6 @@ const AuthModal = ({ type, onClose }) => {
         },
         true
       );
-      console.log(response);
 
       if (response.success !== true) {
         if (error.type === "INVALID_CREDENTIALS") {
@@ -177,10 +173,8 @@ const AuthModal = ({ type, onClose }) => {
       } else if (response.success) {
         setSuccess("Login successful! Redirecting to dashboard...");
         localStorage.setItem("userData", JSON.stringify(response.data));
-        // Clear form
         setLoginForm({ email: "", password: "" });
 
-        // Close modal and navigate after a short delay
         setTimeout(() => {
           setActiveTab(null);
           navigate("/dashboard");
@@ -202,6 +196,32 @@ const AuthModal = ({ type, onClose }) => {
       handleSignup(e);
     }
   };
+
+  // Reusable password input with eye toggle
+  const PasswordInput = ({ id, name, value, onChange, placeholder, show, onToggle, disabled }) => (
+    <div className="relative">
+      <input
+        id={id}
+        name={name}
+        value={value}
+        onChange={onChange}
+        type={show ? "text" : "password"}
+        placeholder={placeholder}
+        className="w-full px-3 py-2 pr-10 bg-gray-800/50 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+        required
+        disabled={disabled}
+      />
+      <button
+        type="button"
+        onClick={onToggle}
+        disabled={disabled}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors disabled:opacity-50"
+        tabIndex={-1}
+      >
+        {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </button>
+    </div>
+  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -292,15 +312,14 @@ const AuthModal = ({ type, onClose }) => {
                 >
                   Password
                 </label>
-                <input
+                <PasswordInput
                   id="loginPassword"
                   name="password"
                   value={loginForm.password}
                   onChange={handleLoginInputChange}
-                  type="password"
                   placeholder="Enter your password"
-                  className="w-full px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  required
+                  show={showLoginPassword}
+                  onToggle={() => setShowLoginPassword((v) => !v)}
                   disabled={loading}
                 />
               </div>
@@ -418,15 +437,14 @@ const AuthModal = ({ type, onClose }) => {
                 >
                   Password
                 </label>
-                <input
+                <PasswordInput
                   id="signupPassword"
                   name="password"
                   value={signupForm.password}
                   onChange={handleSignupInputChange}
-                  type="password"
                   placeholder="Create a strong password"
-                  className="w-full px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  required
+                  show={showSignupPassword}
+                  onToggle={() => setShowSignupPassword((v) => !v)}
                   disabled={loading}
                 />
               </div>
@@ -437,15 +455,14 @@ const AuthModal = ({ type, onClose }) => {
                 >
                   Confirm Password
                 </label>
-                <input
+                <PasswordInput
                   id="confirmPassword"
                   name="confirmPassword"
                   value={signupForm.confirmPassword}
                   onChange={handleSignupInputChange}
-                  type="password"
                   placeholder="Confirm your password"
-                  className="w-full px-3 py-2 bg-gray-800/50 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  required
+                  show={showConfirmPassword}
+                  onToggle={() => setShowConfirmPassword((v) => !v)}
                   disabled={loading}
                 />
               </div>

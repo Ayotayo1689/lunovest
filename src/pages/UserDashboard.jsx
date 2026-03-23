@@ -1746,7 +1746,7 @@ export default function UserDashboard() {
       </main>
 
       {/* Create Plan Modal */}
-      <Dialog open={createPlanModal}>
+      <Dialog onOpenChange={closeCreatePlanModal}  open={createPlanModal}>
         <DialogContent className="sm:max-w-md bg-gradient-to-br from-slate-900 to-purple-900/50 border-purple-500/30 backdrop-blur-sm">
           <DialogHeader>
             <DialogTitle className="text-white text-center text-xl flex items-center justify-center gap-2">

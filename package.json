@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node api.js && vite",
     "dev:staging": "vite --mode staging",
     "dev:prod": "vite --mode production",
-    "build": "vite build",
+    "build": "node api.js && vite build",
     "build:staging": "vite build --mode staging",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
